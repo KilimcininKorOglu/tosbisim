@@ -83,8 +83,10 @@ until [ "$(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
   # A daemon that died while cutting the charge would leave the battery to drain to 0 % (the cut is released only by a
   # running daemon): put every cut node back to "charge" after any exit. These are the normal values.
   release_charge() {
-    for n in power_supply/battery/batt_slate_mode:0 power_supply/battery/input_suspend:0 qcom-battery/input_suspend:0 \
-             power_supply/battery/charging_enabled:1; do
+    for n in power_supply/battery/batt_slate_mode:0 power_supply/battery/input_suspend:0 power_supply/usb/input_suspend:0 power_supply/main/input_suspend:0 power_supply/ac/input_suspend:0 power_supply/dc/input_suspend:0 \
+             qcom-battery/input_suspend:0 power_supply/battery/charging_enabled:1 power_supply/battery/battery_charging_enabled:1 power_supply/battery/charge_disable:0 \
+             power_supply/battery/charge_behaviour:auto power_supply/usb/charge_behaviour:auto power_supply/charger/charge_behaviour:auto \
+             power_supply/main/charge_behaviour:auto power_supply/bms/charge_behaviour:auto; do
       f=/sys/class/${n%%:*}
       [ -e "$f" ] && echo "${n##*:}" > "$f" 2>/dev/null
     done

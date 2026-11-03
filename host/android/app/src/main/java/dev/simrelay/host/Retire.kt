@@ -229,7 +229,13 @@ object Retire {
             |pm uninstall ${'$'}PKG
             |am force-stop ${'$'}PKG
             |sleep 1
-            |for n in power_supply/battery/batt_slate_mode:0 power_supply/battery/input_suspend:0 qcom-battery/input_suspend:0 power_supply/battery/charging_enabled:1; do
+            |for n in power_supply/battery/batt_slate_mode:0 power_supply/battery/input_suspend:0 power_supply/usb/input_suspend:0 power_supply/main/input_suspend:0 power_supply/ac/input_suspend:0 power_supply/dc/input_suspend:0 \
+            |         qcom-battery/input_suspend:0 power_supply/battery/charging_enabled:1 power_supply/battery/battery_charging_enabled:1 power_supply/battery/charge_disable:0 \
+            |         power_supply/battery/charge_behaviour:auto power_supply/usb/charge_behaviour:auto power_supply/charger/charge_behaviour:auto \
+            |         power_supply/main/charge_behaviour:auto power_supply/bms/charge_behaviour:auto \
+            |         power_supply/battery/charge_control_end_threshold:100 power_supply/battery/charge_control_start_threshold:0 \
+            |         power_supply/main/charge_control_end_threshold:100 power_supply/bms/charge_control_end_threshold:100 \
+            |         power_supply/battery/batt_full_capacity:100 power_supply/battery/charge_stop_level:100; do
             |  f=/sys/class/${'$'}{n%%:*}; [ -e "${'$'}f" ] && echo "${'$'}{n##*:}" > "${'$'}f"
             |done
             |# What service.sh silenced (its snapshot, else Android's defaults)

@@ -5,7 +5,7 @@
 //   SCREEN_OFF / WAKE      KEYCODE_SLEEP / KEYCODE_WAKEUP through /system/bin/input (the app may not hold
 //                          DEVICE_POWER)
 //   ROLE <role> <package>  cmd role add-role-holder (the app may not hold MANAGE_ROLE_HOLDERS)
-//   CHARGE <percent>       charge cap through the first kernel node this phone has (see CAP_NODES)
+//   CHARGE <target>        battery-care target; 60 -> charge below 57, hold at 60, drain above 62
 //   escape gesture         Volume Up x3 then Volume Down x3 within 5 s, read from /dev/input without grabbing
 //                          (volume keys keep working; works with the screen off) -> wake + tell the app
 
@@ -38,13 +38,6 @@ extern char **environ;
 #define ESCAPE_WINDOW_NS 5000000000LL
 #define ESCAPE_ACTION "dev.simrelay.host.BOX_ESCAPE"
 #define ESCAPE_RECEIVER "dev.simrelay.host/.DaemonEventReceiver"
-
-// Charge cap nodes, most specific first. Each takes a percentage.
-static const char *CAP_NODES[] = {
-    "/sys/class/power_supply/battery/batt_full_capacity",              // Samsung (One UI "Protect battery")
-    "/sys/class/power_supply/battery/charge_control_end_threshold",    // Linux power_supply ABI
-    "/sys/class/power_supply/battery/charge_stop_level",               // some Xiaomi/Google kernels
-};
 
 static int g_keys[BOX_MAX_KEYDEVS];
 static int g_power[BOX_MAX_KEYDEVS], g_grabbed[BOX_MAX_KEYDEVS], g_volup[BOX_MAX_KEYDEVS], g_voldown[BOX_MAX_KEYDEVS];
@@ -106,39 +99,76 @@ int box_role(const char *role, const char *pkg) {
     return spawn(argv);
 }
 
-// ------------------------------------------------------------------ charge limit
+// ------------------------------------------------------------------ battery care
 //
-// A cap node (Samsung batt_full_capacity, ...) only stops charging at N %: a battery already above N stays there,
-// held full on charger power (seen on r8q 16 Oct: cap 80, "Not charging", 100 %). So above the limit we also cut the
-// charger input (Samsung batt_slate_mode / Qualcomm input_suspend): the phone runs on its battery down to the limit,
-// then the cap takes over. Without a cap node the cut alone holds the limit, charging back from limit-5.
-// Driven by power_supply uevents (no polling); the limit is persisted so it is back at boot before the app is.
-// Fail-safe: the cut is released at start, at exit, below MIN_ON_BATTERY and whenever no limit is set.
+// Universal soft charge control. No charger chip or kernel is assumed: the daemon probes the power_supply
+// class and uses the first safe control this phone exposes.
+//
+//   1. charge_behaviour=inhibit-charge (Linux power_supply ABI): USB input stays on, the battery stops
+//      charging. This is the closest thing to true bypass the kernel can offer.
+//   2. A cap node plus a cut node: stop charging at the target, cut the charger input above the drain
+//      threshold, release it again at the target. Without a cap node the cut cycles between resume and target.
+//   3. Cap or cut alone, when that is all the phone has.
+//
+// The target is the user's percentage. The band is derived: 60% -> charge below 57%, hold at 60%, drain
+// above 62%. 100% turns the feature off. Driven by power_supply uevents and a periodic check; the target is
+// persisted so it survives the app and a reboot. Fail-safe: all controls are released at start, at exit,
+// below 15% and whenever no limit is set.
 
-// Each cut node with the value that stops charging (the other value lets it charge again). charging_enabled is the
-// most common node in the firmware corpus (422 phones, Qualcomm smb and MediaTek chargers; 19 Oct): it holds the
-// battery on charger power instead of running from it, which also holds the limit.
 static const struct { const char *path; int stop; } CUT_NODES[] = {
-    { "/sys/class/power_supply/battery/batt_slate_mode", 1 },           // Samsung: 1 = run from the battery
-    { "/sys/class/power_supply/battery/input_suspend", 1 },             // Qualcomm/MediaTek: 1 = charger input suspended
-    { "/sys/class/qcom-battery/input_suspend", 1 },                     // newer Qualcomm (qti_battery_charger): the same
-    { "/sys/class/power_supply/battery/charging_enabled", 0 },          // 0 = don't charge
+    { "/sys/class/power_supply/battery/batt_slate_mode", 1 },           // Samsung: run from the battery
+    { "/sys/class/power_supply/battery/charging_enabled", 0 },          // may keep input (bypass) or cut it
+    { "/sys/class/power_supply/battery/battery_charging_enabled", 0 },  // Samsung/OnePlus spelling
+    { "/sys/class/power_supply/battery/charge_disable", 1 },            // some Xiaomi/MediaTek kernels
+    { "/sys/class/power_supply/battery/input_suspend", 1 },             // Qualcomm/MediaTek: input suspended
+    { "/sys/class/qcom-battery/input_suspend", 1 },                     // newer Qualcomm qti_battery_charger
+    { "/sys/class/power_supply/usb/input_suspend", 1 },                 // some vendors put it on the USB supply
+    { "/sys/class/power_supply/main/input_suspend", 1 },
+    { "/sys/class/power_supply/ac/input_suspend", 1 },
+    { "/sys/class/power_supply/dc/input_suspend", 1 },
+};
+static const char *CAP_NODES[] = {
+    "/sys/class/power_supply/battery/batt_full_capacity",              // Samsung "Protect battery"
+    "/sys/class/power_supply/battery/charge_control_end_threshold",    // Linux power_supply ABI
+    "/sys/class/power_supply/battery/charge_stop_level",               // some Xiaomi/Google kernels
+    "/sys/class/power_supply/main/charge_control_end_threshold",
+    "/sys/class/power_supply/bms/charge_control_end_threshold",
+    "/sys/class/power_supply/lenovo_battery/charge_control_end_threshold",
+};
+static const char *START_NODES[] = {
+    "/sys/class/power_supply/battery/charge_control_start_threshold",
+    "/sys/class/power_supply/main/charge_control_start_threshold",
+    "/sys/class/power_supply/bms/charge_control_start_threshold",
+    "/sys/class/power_supply/lenovo_battery/charge_control_start_threshold",
 };
 #define BATT_CAPACITY "/sys/class/power_supply/battery/capacity"
 #define LIMIT_DIR "/data/adb/tosbisim"
 #define LIMIT_FILE LIMIT_DIR "/charge_limit"
+#define ORIGINAL_FILE LIMIT_DIR "/charge_original"
 #define MIN_ON_BATTERY 15
+#define CHARGE_MIN 50
+#define CHARGE_RESUME_MARGIN 3
+#define CHARGE_DRAIN_MARGIN 2
 
-static int g_limit = 0;                // 0 or 100 = no limit
+static int g_limit = 0;                // target percent; 0 or 100 = no limit
+static int g_resume = 0;               // charge again at or below this level
+static int g_drain = 0;                // above this level, drain toward the target
 static int g_cutting = 0;
-// Re-cuts after something reset the node: at most RECUT_MAX an hour. A kernel that undoes every write would otherwise
-// turn each write's power event into the next write, for ever; past the budget the limit is left alone until the hour
-// is over (the battery charges, which is the safe direction).
+static int g_cut_failed = 0;
+static int g_cap_original = -1;        // OEM/user threshold before battery care touched it
+static int g_start_original = -1;
+static int g_originals_loaded = 0;
+static char g_behaviour_path[256];
+static int g_behaviour_force = 0;
+static int g_behaviour_scanned = 0;
+static int g_behaviour_failed = 0;
+// Re-cuts after something reset the node: at most RECUT_MAX an hour. A kernel that undoes every write would
+// otherwise turn each write's power event into the next write, for ever; past the budget the limit is left
+// alone until the hour is over (the battery charges, which is the safe direction).
 #define RECUT_MAX 6
 static long g_recut_window = -1;       // CLOCK_BOOTTIME s the hour began, -1 = none yet (0 is a real time: boot)
 static int g_recuts = 0;
 static long g_recut_paused_until = 0;  // budget spent: the limit is left alone until then (CLOCK_BOOTTIME s)
-static int g_cut_failed = 0;
 
 static long boot_s(void) {
     struct timespec t;
@@ -183,82 +213,292 @@ static int write_int(const char *path, int v) {
     return ok ? 0 : -1;
 }
 
+static int read_text(const char *path, char *out, size_t size) {
+    int fd = open(path, O_RDONLY | O_CLOEXEC);
+    if (fd < 0) return -1;
+    ssize_t n = read(fd, out, size - 1);
+    close(fd);
+    if (n <= 0) return -1;
+    out[n] = 0;
+    while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r' || out[n - 1] == ' ')) out[--n] = 0;
+    return 0;
+}
+
+static int write_text(const char *path, const char *value) {
+    int fd = open(path, O_WRONLY | O_CLOEXEC);
+    if (fd < 0) return -1;
+    size_t n = strlen(value);
+    int ok = write(fd, value, n) == (ssize_t)n;
+    close(fd);
+    return ok ? 0 : -1;
+}
+
+/** Locate a writable charge_behaviour that offers inhibit-charge (and optionally force-discharge). */
+static void find_behaviour(void) {
+    if (g_behaviour_scanned) return;
+    g_behaviour_scanned = 1;
+    g_behaviour_path[0] = 0;
+    g_behaviour_force = 0;
+    DIR *dir = opendir("/sys/class/power_supply");
+    if (!dir) return;
+    struct dirent *entry;
+    while ((entry = readdir(dir))) {
+        if (entry->d_name[0] == '.') continue;
+        char path[256], value[256];
+        snprintf(path, sizeof(path), "/sys/class/power_supply/%s/charge_behaviour", entry->d_name);
+        if (!node_writable(path) || read_text(path, value, sizeof(value)) < 0) continue;
+        if (!strstr(value, "inhibit-charge")) continue;
+        snprintf(g_behaviour_path, sizeof(g_behaviour_path), "%s", path);
+        g_behaviour_force = strstr(value, "force-discharge") != NULL;
+        LOGI("battery care: %s offers %s", path, g_behaviour_force ? "inhibit-charge + force-discharge" : "inhibit-charge");
+        break;
+    }
+    closedir(dir);
+}
+
+/** The value inside [...] of a power_supply enum, e.g. "[auto] inhibit-charge force-discharge". */
+static int behaviour_active(const char *wanted) {
+    char value[256];
+    if (read_text(g_behaviour_path, value, sizeof(value)) < 0) return 0;
+    char *left = strchr(value, '['), *right = left ? strchr(left, ']') : NULL;
+    if (left && right && right > left + 1) {
+        *right = 0;
+        return strcmp(left + 1, wanted) == 0;
+    }
+    return strcmp(value, wanted) == 0;
+}
+
+static int set_behaviour(const char *value) {
+    if (!g_behaviour_path[0]) return 0;
+    if (behaviour_active(value)) return 0;
+    if (write_text(g_behaviour_path, value) < 0) {
+        if (!g_behaviour_failed) LOGW("battery care: writing %s=%s failed: %s", g_behaviour_path, value, strerror(errno));
+        g_behaviour_failed = 1;
+        return -1;
+    }
+    g_behaviour_failed = 0;
+    LOGI("battery care: charge_behaviour=%s (%s)", value, g_behaviour_path);
+    return 0;
+}
+
+static int charger_online(void) {
+    static const char *nodes[] = {
+        "/sys/class/power_supply/usb/online",
+        "/sys/class/power_supply/ac/online",
+        "/sys/class/power_supply/dc/online",
+        "/sys/class/power_supply/pc_port/online",
+    };
+    int known = 0;
+    for (size_t i = 0; i < sizeof(nodes) / sizeof(nodes[0]); i++) {
+        int value = read_int(nodes[i]);
+        if (value < 0) continue;
+        known = 1;
+        if (value > 0) return 1;
+    }
+    return known ? 0 : -1;
+}
+
+static void update_band(void) {
+    if (g_limit <= 0 || g_limit >= 100) { g_resume = g_drain = 0; return; }
+    g_resume = g_limit - CHARGE_RESUME_MARGIN;
+    if (g_resume < 30) g_resume = 30;
+    g_drain = g_limit + CHARGE_DRAIN_MARGIN;
+    if (g_drain > 95) g_drain = 95;
+}
+
 static void set_cut(int on) {
     int i = cut_index();
     if (i < 0) return;
     const char *node = CUT_NODES[i].path;
-    if (write_int(node, on ? CUT_NODES[i].stop : !CUT_NODES[i].stop) < 0) {
-        if (!g_cut_failed) LOGW("charge limit: writing %s failed: %s", node, strerror(errno));   // once until one works
+    int want = on ? CUT_NODES[i].stop : !CUT_NODES[i].stop;
+    if (read_int(node) == want) { g_cutting = on; return; }       // already there: no needless uevent
+    if (write_int(node, want) < 0) {
+        if (!g_cut_failed) LOGW("battery care: writing %s failed: %s", node, strerror(errno));   // once until one works
         g_cut_failed = 1;
         return;
     }
     g_cut_failed = 0;
-    if (g_cutting != on) LOGI("charge limit: %s (%s)", on ? "running on battery down to the limit" : "charger power back", node);
+    if (g_cutting != on) LOGI("battery care: %s (%s)", on ? "charging stopped" : "charging allowed", node);
     g_cutting = on;
 }
 
-/** "cap+cut", "cap", "cut" or NULL: what this phone offers for a charge limit. */
+static void save_originals(void) {
+    mkdir(LIMIT_DIR, 0700);
+    FILE *f = fopen(ORIGINAL_FILE, "we");
+    if (f) { fprintf(f, "%d %d\n", g_cap_original, g_start_original); fclose(f); }
+}
+
+static void load_originals(void) {
+    if (g_originals_loaded) return;
+    g_originals_loaded = 1;
+    FILE *f = fopen(ORIGINAL_FILE, "re");
+    if (!f) return;
+    int cap = -1, start = -1;
+    if (fscanf(f, "%d %d", &cap, &start) == 2 && cap >= 0 && cap <= 100 && start >= 0 && start <= 100) {
+        g_cap_original = cap;
+        g_start_original = start;
+    }
+    fclose(f);
+}
+
+/** Remember the OEM/user values the first time battery care is applied, so turning it off restores them. */
+static void capture_originals(void) {
+    load_originals();
+    int changed = 0;
+    if (g_cap_original < 0) {
+        const char *cap = cap_node();
+        int value = cap ? read_int(cap) : -1;
+        if (value >= 0 && value <= 100) { g_cap_original = value; changed = 1; }
+    }
+    if (g_start_original < 0) {
+        const char *start = first_writable(START_NODES, sizeof(START_NODES) / sizeof(START_NODES[0]));
+        int value = start ? read_int(start) : -1;
+        if (value >= 0 && value <= 100) { g_start_original = value; changed = 1; }
+    }
+    if (changed) save_originals();
+}
+
+/** Allow charging again without losing the target cap (low battery, or a paused hold). */
+static void release_cut(void) {
+    find_behaviour();
+    set_behaviour("auto");
+    if (cut_node()) set_cut(0);
+    g_cutting = 0;
+}
+
+/** Release every control to normal charging, restoring the thresholds the phone had before battery care. */
+static void release_charge(void) {
+    release_cut();
+    const char *cap = cap_node();
+    const char *start = first_writable(START_NODES, sizeof(START_NODES) / sizeof(START_NODES[0]));
+    // Restore end first: an original start (e.g. 80) may be above the target end we are replacing.
+    if (cap && g_cap_original >= 0 && read_int(cap) != g_cap_original) write_int(cap, g_cap_original);
+    if (start && g_start_original >= 0 && read_int(start) != g_start_original) write_int(start, g_start_original);
+}
+
+/** "behaviour+force", "behaviour", "cap+cut", "cap", "cut" or NULL: what this phone offers. */
 const char *box_charge_node(void) {
+    find_behaviour();
+    if (g_behaviour_path[0]) return g_behaviour_force ? "behaviour+force" : "behaviour";
     const char *cap = cap_node(), *cut = cut_node();
     return cap && cut ? "cap+cut" : cap ? "cap" : cut ? "cut" : NULL;
 }
 
+void box_charge_status(char *out, size_t size) {
+    snprintf(out, size, "target=%d resume=%d drain=%d cutting=%d", g_limit, g_resume, g_drain, g_cutting);
+}
+
 void box_charge_check(void) {
-    int i = cut_index();
-    if (i < 0) return;
+    find_behaviour();
     int level = read_int(BATT_CAPACITY);
     if (level < 0) return;
-    if (g_limit <= 0 || g_limit >= 100 || level <= MIN_ON_BATTERY) { if (g_cutting) set_cut(0); return; }
+    if (g_limit <= 0 || g_limit >= 100) return;                 // off: leave the OEM/user thresholds alone
+    if (level <= MIN_ON_BATTERY) { release_cut(); return; }     // charge, but the cap still stops at the target
+
+    int online = charger_online();
+    int plugged = online != 0;                              // unknown counts as plugged: release only on a clear 0
+    int cut = cut_index();
+
+    if (g_behaviour_path[0]) {
+        if (level > g_drain && plugged && g_behaviour_force) {
+            set_cut(0);
+            if (set_behaviour("force-discharge") == 0) return;
+        }
+        if (level > g_drain && plugged && cut >= 0) {       // no force-discharge: use a cut while draining
+            set_behaviour("auto");
+            set_cut(1);
+            return;
+        }
+        if (g_cutting) set_cut(0);
+        if (level >= g_limit) set_behaviour("inhibit-charge");
+        else if (level <= g_resume) set_behaviour("auto");
+        return;
+    }
+
+    const char *cap = cap_node();
+    if (cap) {
+        int current = read_int(cap);
+        if (current != g_limit) write_int(cap, g_limit);
+    }
+    if (cut < 0) return;
     long now = boot_s();
     if (g_recut_paused_until) {
         if (now < g_recut_paused_until) return;                  // still in the hour we gave up
         g_recut_paused_until = 0;
     }
-    int with_cap = cap_node() != NULL;
-    int keep_cut_above = with_cap ? g_limit : g_limit - 5;      // the cut ends at this level
+    int with_cap = cap != NULL;
+    int release_at = with_cap ? g_limit : g_resume;
+    int should_cut = with_cap ? (plugged && level > g_drain) : (plugged && level >= g_limit);
     // The kernel can undo the cut behind our back: the Redmi Note 8 Pro's charger driver clears input_suspend when a
-    // charger is plugged in, and the battery charged past the limit (95 -> 96 %, 20 Oct 2026). Read it back on every
-    // power event and put it back. Only a re-cut that is really written counts against the hour's budget (audit,
-    // 20 Oct 2026).
-    if (g_cutting && read_int(CUT_NODES[i].path) != CUT_NODES[i].stop) {
+    // charger is plugged in, and charged past the limit (95 -> 96 %, 20 Oct 2026). Read it back on every power event
+    // and put it back. Only a re-cut that is really written counts against the hour's budget (audit, 20 Oct 2026).
+    if (g_cutting && read_int(CUT_NODES[cut].path) != CUT_NODES[cut].stop) {
         g_cutting = 0;                                          // honest state: we are not cutting
-        if (level <= keep_cut_above) return;                    // the cut would end here anyway
+        if (level <= release_at) return;
         if (g_recut_window < 0 || now - g_recut_window >= 3600) { g_recut_window = now; g_recuts = 0; }
         if (g_recuts >= RECUT_MAX) {
-            LOGW("charge limit: %s keeps being reset, leaving it this hour", CUT_NODES[i].path);
+            LOGW("battery care: %s keeps being reset, leaving it this hour", CUT_NODES[cut].path);
             g_recut_paused_until = g_recut_window + 3600;
             return;
         }
         g_recuts++;
-        LOGW("charge limit: the kernel reset %s, cutting again (%d this hour)", CUT_NODES[i].path, g_recuts);
+        LOGW("battery care: the kernel reset %s, cutting again (%d this hour)", CUT_NODES[cut].path, g_recuts);
         set_cut(1);
         return;
     }
-    if (!g_cutting && (with_cap ? level > g_limit : level >= g_limit)) set_cut(1);
-    else if (g_cutting && level <= keep_cut_above) set_cut(0);
+    if (!g_cutting && should_cut) set_cut(1);
+    else if (g_cutting && level <= release_at) set_cut(0);
 }
 
 int box_charge(int percent) {
-    if (percent < 50 || percent > 100) return -1;
+    if (percent < CHARGE_MIN || percent > 100) return -1;
+    g_behaviour_scanned = 0;                            // a driver may have appeared since the last scan
+    find_behaviour();
     if (!box_charge_node()) return -2;
-    g_limit = percent;
+    g_limit = percent >= 100 ? 0 : percent;
+    update_band();
+    capture_originals();
+    if (g_limit == 0) {
+        release_charge();
+        mkdir(LIMIT_DIR, 0700);
+        FILE *f = fopen(LIMIT_FILE, "we");
+        if (f) { fprintf(f, "100\n"); fclose(f); }
+        LOGI("battery care: off");
+        return 0;
+    }
+    const char *start = first_writable(START_NODES, sizeof(START_NODES) / sizeof(START_NODES[0]));
     const char *cap = cap_node();
-    if (cap && write_int(cap, percent) < 0) LOGW("charge cap write failed: %s", strerror(errno));
+    int new_end = g_limit > 0 ? g_limit : 100;
+    int new_start = g_limit > 0 ? g_resume : 0;
+    if (cap) {
+        int old_end = read_int(cap);
+        // start must stay below end: when raising the target, write end first; when lowering it, start first.
+        if (start && old_end >= 0 && new_start > old_end) {
+            write_int(cap, new_end);
+            write_int(start, new_start);
+        } else {
+            if (start) write_int(start, new_start);
+            write_int(cap, new_end);
+        }
+    } else if (start) {
+        write_int(start, new_start);
+    }
     mkdir(LIMIT_DIR, 0700);
     FILE *f = fopen(LIMIT_FILE, "we");
     if (f) { fprintf(f, "%d\n", percent); fclose(f); } else LOGW("save %s: %s", LIMIT_FILE, strerror(errno));
-    LOGI("charge limit %d%% (%s)", percent, box_charge_node());
+    LOGI("battery care: target %d%% (band %d-%d, %s)", percent, g_resume, g_drain, box_charge_node());
     box_charge_check();
     return 0;
 }
 
 void box_charge_init(void) {
-    if (cut_node()) set_cut(0);                       // a previous run may have died while cutting
+    capture_originals();                                // read before we touch anything
+    release_charge();                                   // a previous run may have died while cutting
     int saved = read_int(LIMIT_FILE);
-    if (saved >= 50 && saved <= 100) box_charge(saved);
+    if (saved >= CHARGE_MIN && saved <= 100) box_charge(saved);
 }
 
-void box_charge_shutdown(void) { if (cut_node()) set_cut(0); }
+void box_charge_shutdown(void) { release_charge(); }
 
 int box_uevent_open(void) {
     int fd = socket(AF_NETLINK, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, NETLINK_KOBJECT_UEVENT);

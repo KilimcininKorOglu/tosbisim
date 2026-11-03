@@ -23,7 +23,7 @@
 //   HAS <control>  -> OK count=n [items=a|b|c] | ERR   (auto profiles: a control on this card, an enum's options)
 //   TUNE [p k per] -> OK prime= keep= period=   (jitter-buffer frames, inject PCM period; live)
 //   AUDIO?         -> OK call= session= silence= cap= voiced= sent= played= peak=   (call test totals)
-//   Box mode (box.c): SCREEN_OFF | WAKE | POWERKEY 1|0 | ROLE <role> <pkg> | CHARGE <percent> | CHARGE? -> OK <node>|ERR
+//   Box mode (box.c): SCREEN_OFF | WAKE | POWERKEY 1|0 | ROLE <role> <pkg> | CHARGE <target> | CHARGE? -> OK <node> target=..|ERR
 //                     NETBLOCK <uid> <0|1> (iptables chain tosbisim_block)
 //                     + the Volume Up x3 / Volume Down x3 escape gesture, reported to the app by broadcast
 // Debug client: simrelayd --client "CMD|SLEEP n|CMD..." (one connection)
@@ -775,7 +775,11 @@ static void handle_line(int fd, char *line) {
         reply(fd, u && on && box_netblock(atoi(u), atoi(on)) == 0 ? "OK" : "ERR bad uid");
     } else if (strcmp(cmd, "CHARGE?") == 0) {
         const char *node = box_charge_node();
-        if (node) reply(fd, "OK %s", node); else reply(fd, "ERR unsupported");
+        if (node) {
+            char status[160];
+            box_charge_status(status, sizeof(status));
+            reply(fd, "OK %s %s", node, status);
+        } else reply(fd, "ERR unsupported");
     } else if (strcmp(cmd, "CHARGE") == 0) {
         char *s = strtok(NULL, " ");
         int rc = box_charge(s ? atoi(s) : -1);
@@ -934,11 +938,11 @@ int main(int argc, char **argv) {
     LOGI("simrelayd %s up: card %d, socket @%s, allowed uid %d", VERSION, g_card, SOCK_NAME, (int)g_allowed_uid);
 
     static conn_t conns[2] = { { .fd = -1, .owner = 1 }, { .fd = -1, .owner = 0 } };   // the app's, a root tool's
-    // 10 min heartbeat: re-check the charge limit even if a phone sends no battery uevents. Kept on its own clock: the
+    // 1 min heartbeat: re-check battery care even if a phone sends no battery uevents. Kept on its own clock: the
     // crumb's shorter timeouts used to stand in for it, and a crumb kept alive by a call skipped it (audit, 20 Oct 2026).
     struct timespec now, heartbeat;
     clock_gettime(CLOCK_MONOTONIC, &heartbeat);
-    heartbeat.tv_sec += 600;
+    heartbeat.tv_sec += 60;
     while (!g_stop) {
         struct pollfd fds[5 + BOX_MAX_KEYDEVS] = {
             { .fd = ls, .events = POLLIN }, { .fd = g_ctl, .events = POLLIN }, { .fd = conns[0].fd, .events = POLLIN },
@@ -950,7 +954,7 @@ int main(int argc, char **argv) {
         box_log_watch();
         box_power_check();
         clock_gettime(CLOCK_MONOTONIC, &now);
-        if (now.tv_sec >= heartbeat.tv_sec) { box_charge_check(); heartbeat.tv_sec = now.tv_sec + 600; }
+        if (now.tv_sec >= heartbeat.tv_sec) { box_charge_check(); heartbeat.tv_sec = now.tv_sec + 60; }
         long long wait_ms = (heartbeat.tv_sec - now.tv_sec) * 1000LL;
         int crumb = crumb_tick();
         if (crumb >= 0 && crumb + 50 < wait_ms) wait_ms = crumb + 50;

@@ -156,7 +156,7 @@ message Box {
   bool on = 1;
   bool suspended = 2;            // escape gesture used: screen usable until suspended_until_ms, then back on
   int64 suspended_until_ms = 3;
-  int32 charge_limit = 4;        // percent: 60 / 80 / 100
+  int32 charge_limit = 4;        // target percent 50-90; 100 = off. Band derived: 60 -> 57..62
   bool charge_limit_supported = 5;
   bool call_screen_hidden = 6;   // host app holds the dialer role (no OEM in-call screen)
   int32 battery_health = 7;      // unused: kernels report design capacity as full capacity, so it was misleading
@@ -164,7 +164,7 @@ message Box {
 
 message SetBox {
   optional bool on = 1;
-  optional int32 charge_limit = 2;
+  optional int32 charge_limit = 2;  // target percent; 100 = off
 }
 
 // The host's Wi-Fi hotspot. The passphrase only travels over the bonded, encrypted BLE link,

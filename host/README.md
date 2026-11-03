@@ -7,7 +7,7 @@ its own Magisk module. The steps below are the developer loop over adb.
 | Part | What it does |
 | --- | --- |
 | `daemon/` — `simrelayd` (C, NDK) | Only root process. Owns in-call mixer state: `CALL_START <session>` applies the profile's capture route, the session's in-call music mixer and both device mutes; `CALL_END` restores. Re-applies a control when the vendor HAL rewrites it (ALSA control events). Clears device mutes at start, exit and on client loss. Socket `@simrelayd` (root + app uid only). |
-| `android/` — host app (Kotlin, priv-app) | Non-UI `InCallService` (CONTROL_INCALL_EXPERIENCE) maps the active call's SIM slot to the voice session and drives the daemon; `HostService` keeps the daemon connection and sends the device profile (`profiles/`); BLE GATT + L2CAP link to the iPhone (`BleLink`, `AudioBridge`, `Relay`); box mode, charge limit, SIMs, guided call test (`VoiceGate`). |
+| `android/` — host app (Kotlin, priv-app) | Non-UI `InCallService` (CONTROL_INCALL_EXPERIENCE) maps the active call's SIM slot to the voice session and drives the daemon; `HostService` keeps the daemon connection and sends the device profile (`profiles/`); BLE GATT + L2CAP link to the iPhone (`BleLink`, `AudioBridge`, `Relay`); box mode, battery care, SIMs, guided call test (`VoiceGate`). |
 | `magisk/` — module | Installs the app as a privileged system app + privapp whitelist, sepolicy rule, starts the daemon with the app's uid, silence policy at boot (DND total silence, no haptics/system sounds, Samsung call end/connect/waiting tones off, zero ring/notification/system volume), runtime permissions, Doze exemption. |
 
 Build and install (phone on USB, rooted with Magisk):
@@ -21,8 +21,27 @@ adb shell su -c 'magisk --install-module /data/local/tmp/simrelay-host-<ver>.zip
 Logs: `adb logcat -s simrelayd SimRelayHost`, boot script log `/data/local/tmp/simrelay-service.log`.
 
 Daemon commands (debug client `--client "A|SLEEP n|B"`): `HELLO`, `STATUS`, `SET <key> <value>`,
-`CALL_START <session>`, `CALL_END`, `IFSTATS <iface>` (hotspot data counter), `NEIGH <iface>` (hotspot devices).
+`CALL_START <session>`, `CALL_END`, `IFSTATS <iface>` (hotspot data counter), `NEIGH <iface>` (hotspot devices),
+`CHARGE <target>` / `CHARGE?` (battery care; 100 = off).
 Host service debug actions (root only, the service is not exported): `PAIR`, `STATUS`, `INJECT_SMS --es from --es body`.
+
+## Battery care
+
+The target is one percentage, in the host setup screen and in the client's Host tab. The daemon derives the band:
+**60% means charge below 57%, hold at 60%, drain above 62%**; 100% turns it off. It probes the standard
+`power_supply` class, not a charger chip:
+
+1. `charge_behaviour` with `inhibit-charge` (Linux 5.16 ABI): USB input stays on and the battery stops charging —
+   the closest the kernel offers to true bypass.
+2. A cap node (`charge_control_end_threshold`, Samsung `batt_full_capacity`, `charge_stop_level`, ...) plus a cut
+   node (`charging_enabled`, `input_suspend`, `batt_slate_mode`, ...): stop at the target, cut above the drain
+   threshold and release at the target. Without a cap the cut cycles between resume and target.
+3. Cap or cut alone when that is all the phone exposes.
+
+No per-device kernel or I2C profile is required. On phones without `charge_behaviour` this protects the battery by
+cycling the charger; it cannot guarantee 0 mA. Every control is released at daemon start, exit, below 15% and when
+the limit is off; `service.sh` and `Retire.kt` also reset the known nodes after a crash or when the phone is given
+back.
 
 ## Hard-won lessons (S20 FE SM-G780G, Android 13, Oct 2026)
 - **Privileged permissions must be whitelisted before the APK asks for them** (`ro.control_privapp_permissions
