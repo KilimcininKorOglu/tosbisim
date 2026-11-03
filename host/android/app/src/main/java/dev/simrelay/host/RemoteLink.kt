@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Remote mode control path (protocol/README.md "Remote mode"): the host waits in the presence room on
- * api.tosbisim.com (Reverb, Pusher protocol) and swaps sealed envelopes with the iPhone as client events.
+ * hermessim.keremgok.tr (Pusher protocol) and swaps sealed envelopes with the phone as client events.
  * Runs only while a key is set. The key arrives over Bluetooth (RemoteSetup) and is kept in app-private prefs.
  */
 object RemoteLink {

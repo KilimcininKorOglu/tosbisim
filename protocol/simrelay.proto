@@ -316,7 +316,7 @@ message Remote {
 // The host's mobile data switch. Off is the user's choice (a LAN-only hotspot, or abroad); the hotspot turns it on.
 message SetMobileData { bool on = 1; }
 
-// Host app updates (README.md "Updates"): the host checks api.tosbisim.com, downloads and verifies a newer APK and
+// Host app updates (README.md "Updates"): the host checks hermessim.keremgok.tr, downloads and verifies a newer APK and
 // tells the client. It installs on the user's word, or by itself at night once the client has been told; never
 // during a call. "Later" postpones a day.
 message Update {

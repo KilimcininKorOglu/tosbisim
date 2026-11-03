@@ -14,7 +14,7 @@ import javax.crypto.spec.SecretKeySpec
 
 /**
  * Minimal TURN client (RFC 8656) for remote-mode audio over UDP: one allocation, one peer bound to channel
- * 0x4000, ChannelData both ways. Long-term credentials come from api.tosbisim.com (TURN REST scheme).
+ * 0x4000, ChannelData both ways. Long-term credentials come from hermessim.keremgok.tr (TURN REST scheme).
  * Requests run synchronously on the caller's thread until [start]; afterwards a reader thread owns the socket's
  * receive side and transactions are matched by id.
  */

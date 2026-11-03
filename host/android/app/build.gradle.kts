@@ -49,7 +49,7 @@ android {
         // Shared host<->client protocol (repo-root protocol/, MIT)
         proto { srcDir("$rootDir/../../protocol") }
     }
-    // Not for the phone: the device index (~4 MB, served by api.tosbisim.com) and the table's hand-written source.
+    // Not for the phone: the support page's own table and its hand-written source.
     // Appended to aapt's default ignore pattern.
     androidResources.ignoreAssetsPattern =
         "!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~:!devices.json:!support.src.json"

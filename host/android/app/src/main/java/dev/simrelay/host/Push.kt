@@ -12,7 +12,7 @@ import dev.simrelay.protocol.v1.SmsReceived
 import org.json.JSONObject
 
 /**
- * Push wake-up (protocol/README.md "Push"): when the iPhone can't hear us, api.tosbisim.com has Apple wake it. A
+ * Push wake-up (protocol/README.md "Push"): when the phone can't hear us, hermessim.keremgok.tr asks FCM to wake it. A
  * ringing call goes as a VoIP push (iOS rings it through CallKit and starts the app, which then reaches us over
  * Bluetooth or the internet); a text the iPhone didn't take within a few seconds goes as an alert push its
  * notification extension decrypts. Both carry the same sealed envelope as the room (push key, AAD "h2c"); the

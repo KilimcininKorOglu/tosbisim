@@ -15,7 +15,7 @@
 
     <!-- normal / runtime (granted with pm grant by the module) -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <!-- api.tosbisim.com: opt-in compatibility reports, live support table -->
+    <!-- hermessim.keremgok.tr: opt-in compatibility reports, live support table -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Dual SIM: per-SIM status (ICCID, switched-off SIMs) and settings (data roaming, data SIM, SIM on/off) -->

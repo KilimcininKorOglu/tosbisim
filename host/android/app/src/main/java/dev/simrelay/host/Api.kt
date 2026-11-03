@@ -11,12 +11,12 @@ import java.net.URL
 import java.util.UUID
 
 /**
- * api.tosbisim.com: opt-in compatibility reports and the live support table. Anonymous: a random id per install (not
+ * hermessim.keremgok.tr: opt-in compatibility reports and the live support table. Anonymous: a random id per install (not
  * the pairing id; hashed on arrival), no account. Calls run off the main thread; [done] gets (ok, detail).
  */
 object Api {
     private const val TAG = "SimRelayHost"
-    private const val BASE = "https://api.tosbisim.com/api/v1"
+    private const val BASE = "https://hermessim.keremgok.tr/api/v1"
 
     fun installId(ctx: Context): String {
         val p = ctx.getSharedPreferences("api", Context.MODE_PRIVATE)

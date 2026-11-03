@@ -10,7 +10,7 @@ import java.util.concurrent.Executors
 
 /**
  * Anonymous diagnostics: what helps us tell "expected to work" from "proven" on phones we never touched, and fix what
- * breaks on them. Events (onboarding milestones, failures, crashes, call-test results) go to api.tosbisim.com/reports
+ * breaks on them. Events (onboarding milestones, failures, crashes, call-test results) go to hermessim.keremgok.tr/reports
  * with the phone's model/firmware facts and a scrubbed excerpt of the host log ([Scrub]: no phone numbers, hardware
  * or IP addresses, ids, network names or message text ever leave the phone). On by default, explained on the setup
  * screen, one switch to turn it off. Queued on disk while offline; at most [PER_DAY] a day, the same event at most

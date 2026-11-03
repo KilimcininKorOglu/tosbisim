@@ -37,7 +37,7 @@ object Compat {
     }
 
     /**
-     * The live table from api.tosbisim.com when we have one (Api.refreshSupportTable), else the bundled copy; a table
+     * The live table from hermessim.keremgok.tr when we have one (Api.refreshSupportTable), else the bundled copy; a table
      * that fails to evaluate falls back to the bundled one. Never throws: this runs on every status the host sends,
      * so a bad server table would otherwise crash every host at every start (audit, 19 Oct).
      */

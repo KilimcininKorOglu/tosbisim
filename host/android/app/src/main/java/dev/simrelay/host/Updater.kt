@@ -17,7 +17,7 @@ import java.util.Calendar
 import java.util.zip.ZipFile
 
 /**
- * The host app updates itself from api.tosbisim.com (protocol/README.md "Updates"): check daily, download and verify
+ * The host app updates itself from hermessim.keremgok.tr (protocol/README.md "Updates"): check daily, download and verify
  * the newest APK (sha256 + same signing key as the installed app), tell the iPhone, then install on the user's word
  * or by itself between 02:00 and 05:00 once the iPhone has been told. Never during a call. "Later" = one day.
  * After an install the new version swaps in its own simrelayd if it differs (no call up).

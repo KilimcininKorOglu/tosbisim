@@ -77,7 +77,7 @@ object Relay {
         app = ctx.applicationContext
         CallRegistry.init(app)
         VoiceGate.init(app)
-        Api.refreshSupportTable(app)          // newest phone tiers from api.tosbisim.com (bundled copy as fallback)
+        Api.refreshSupportTable(app)          // newest phone tiers from hermessim.keremgok.tr (bundled copy as fallback)
         if (pinned() == null) openPairing(FIRST_PAIRING_WINDOW_MS)
         ble = BleLink(app, ::onFrame, ::onLink, ::pairable)
         ble.onServiceReady = { askForHello() }
