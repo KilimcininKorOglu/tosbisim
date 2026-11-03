@@ -151,7 +151,11 @@
     <string name="audio_untested">Ready for the call test (run it from TosbiSim on your phone)</string>
     <string name="audio_basic">Basic mode: no call audio on this phone yet</string>
     <string name="c_box">Box mode</string>
-    <string name="box_on">On; charge limit %d%%</string>
+    <string name="box_on">On; battery care %d%%</string>
+    <string name="battery_care">Battery care</string>
+    <string name="battery_care_target">Target %d%%</string>
+    <string name="battery_care_band">Charges below %1$d%%, holds at the target, drains above %2$d%%</string>
+    <string name="battery_care_off">Off: charges normally</string>
     <string name="box_off">Off (turn it on from TosbiSim on your phone when setup is done)</string>
 
     <string name="error_title">This screen hit a problem</string>

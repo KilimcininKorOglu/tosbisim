@@ -26,6 +26,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
 import dev.simrelay.protocol.v1.Sim
@@ -66,6 +67,10 @@ class SetupActivity : Activity() {
     private var shown: Model? = null
     private var countdown: TextView? = null
     private var retireStatus: TextView? = null              // the removal's progress screen, while it is up
+    private var batteryCare: LinearLayout? = null           // created once; re-added after every model redraw
+    private var batteryTarget: TextView? = null
+    private var batteryBand: TextView? = null
+    private var batterySeek: SeekBar? = null
     private lateinit var root: LinearLayout
     private lateinit var c: Palette
 
@@ -462,6 +467,44 @@ class SetupActivity : Activity() {
 
     // ------------------------------------------------------------------ views
 
+    /** Battery-care control on the host itself; the client app has the same target slider. */
+    private fun batteryCareCard(): View {
+        val card = batteryCare ?: LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = rounded(c.card, 16)
+            setPadding(dp(16), dp(14), dp(16), dp(10))
+            addView(text(getString(R.string.battery_care), 18f, c.text, bold = true))
+            batteryTarget = text("", 15f, c.accent, bold = true).apply { setPadding(0, dp(4), 0, 0) }
+            addView(batteryTarget)
+            batterySeek = SeekBar(this@SetupActivity).apply {
+                max = 50                                       // 50..100: 100 turns the limit off
+                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(seek: SeekBar, progress: Int, fromUser: Boolean) {
+                        if (fromUser) updateBatteryLabels()
+                    }
+                    override fun onStartTrackingTouch(seek: SeekBar) = Unit
+                    override fun onStopTrackingTouch(seek: SeekBar) {
+                        Box.setChargeLimit(seek.progress + 50)
+                    }
+                })
+            }
+            addView(batterySeek)
+            batteryBand = text("", 12f, c.secondary).apply { setPadding(0, 0, 0, dp(4)) }
+            addView(batteryBand)
+        }
+        batterySeek?.progress = (Box.chargeLimit - 50).coerceIn(0, 50)
+        updateBatteryLabels()
+        batteryCare = card
+        return card
+    }
+
+    private fun updateBatteryLabels() {
+        val target = (batterySeek?.progress ?: (Box.chargeLimit - 50)).coerceIn(0, 50) + 50
+        batteryTarget?.text = getString(R.string.battery_care_target, target)
+        batteryBand?.text = if (target >= 100) getString(R.string.battery_care_off)
+            else getString(R.string.battery_care_band, (target - 3).coerceAtLeast(30), (target + 2).coerceAtMost(95))
+    }
+
     private fun show(m: Model) {
         if (Retire.running) { showRetire(); return }    // the removal's own progress screen, also after a rotation
         retireStatus = null
@@ -479,6 +522,7 @@ class SetupActivity : Activity() {
                 setPadding(dp(14), dp(6), dp(14), dp(6))
                 m.checks.forEach { addView(row(it)) }
             })
+            if (host && Box.chargeSupported) root.addView(batteryCareCard(), lp(top = 14))
             root.addView(diagnostics(), lp(top = 14))
             // Whenever root works, a broken host too (module turned off, service down): it must be removable
             if (host || Onboarding.root == Onboarding.Root.OK) root.addView(retireCard(), lp(top = 14))

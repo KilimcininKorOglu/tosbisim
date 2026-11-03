@@ -145,7 +145,11 @@
     <string name="audio_untested">Arama testine hazır (telefonunuzdaki TosbiSim\'den başlatın)</string>
     <string name="audio_basic">Temel mod: bu telefonda henüz arama sesi yok</string>
     <string name="c_box">Kutu modu</string>
-    <string name="box_on">Açık; şarj sınırı %%%d</string>
+    <string name="box_on">Açık; pil koruması %%%d</string>
+    <string name="battery_care">Pil koruması</string>
+    <string name="battery_care_target">Hedef %%%d</string>
+    <string name="battery_care_band">%%%1$d altında şarj eder, hedefte tutar, %%%2$d üstünde deşarj eder</string>
+    <string name="battery_care_off">Kapalı: normal şarj</string>
     <string name="box_off">Kapalı (kurulum bitince telefonunuzdaki TosbiSim\'den açın)</string>
 
     <string name="error_title">Bu ekranda bir sorun oluştu</string>

@@ -47,6 +47,7 @@ object Box {
     /** The mask without 5G, or [mask] itself when that would leave no LTE (a "5G only" choice would become "no
      *  radio": no calls, no texts; audit, 19 Oct). */
     private fun withoutNr(mask: Long): Long = (mask and BITMASK_NR.inv()).let { if (it and BITMASK_LTE == 0L) mask else it }
+    /** Target percent; the daemon derives the charge/resume/drain band (60 -> 57..62). 100 = off. */
     const val DEFAULT_CHARGE_LIMIT = 80
     private val NET_BLOCK = listOf("com.google.android.gms", "com.android.vending")
 
