@@ -67,7 +67,7 @@ a { color:var(--accent); }
   <h2 data-t="rulesTitle"></h2>
   <ul class="rules" id="rules"></ul>
   <footer><span data-t="footer"></span> · <span id="updated"></span> ·
-    <a href="https://github.com/Mert-Eren-Karabulut/tosbisim">GitHub</a></footer>
+    <a href="https://github.com/KilimcininKorOglu/tosbisim">GitHub</a></footer>
 </main>
 <script>
 const DATA = __DATA__;
@@ -80,7 +80,7 @@ const T = {
               experimental: "Our audio family, not confirmed yet.", not_yet: "Audio family we can't drive yet: Basic mode only.",
               unsupported: "Can't be used as a host." },
     familiesTitle: "Audio families", famYes: "supported", famExp: "experimental", famNo: "not yet",
-    corpus: n => `Search for your phone: over 45,000 models are listed with their state, ${n} of them checked against their firmware.`,
+    corpus: n => `Search for your phone: ${n} additional models checked against their firmware are searchable here.`,
     oldAndroid: v => `Checked on Android ${v} firmware: the host needs Android 11 or newer.`,
     rulesTitle: "Never supported", none: "Not in the list yet: Basic mode should work; Qualcomm and MediaTek phones can also try the call test.",
     footer: "Same table as the TosbiSim apps", updated: "updated" },
@@ -92,7 +92,7 @@ const T = {
               experimental: "Bizim ses ailemiz, henüz doğrulanmadı.", not_yet: "Henüz yönetemediğimiz ses ailesi: yalnızca Temel mod.",
               unsupported: "Ana cihaz olarak kullanılamaz." },
     familiesTitle: "Ses aileleri", famYes: "destekleniyor", famExp: "deneysel", famNo: "henüz değil",
-    corpus: n => `Telefonunuzu arayın: 45.000'den fazla model durumuyla listeleniyor, ${n} tanesi yazılımına göre incelendi.`,
+    corpus: n => `Telefonunuzu arayın: yazılımına göre incelenen ${n} ek model burada aranabilir.`,
     oldAndroid: v => `Android ${v} yazılımında incelendi: ana cihaz için Android 11 veya daha yenisi gerekir.`,
     rulesTitle: "Hiçbir zaman desteklenmeyenler", none: "Henüz listede yok: Temel mod çalışmalı; Qualcomm ve MediaTek telefonlar arama testini de deneyebilir.",
     footer: "TosbiSim uygulamalarıyla aynı tablo", updated: "güncelleme" } };
@@ -100,20 +100,10 @@ const ORDER = ["verified", "expected", "experimental", "not_yet"];
 let lang = (navigator.language || "en").toLowerCase().startsWith("tr") ? "tr" : "en";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-// The full phone index (~46k phones) lives on api.tosbisim.com; this page's own table answers instantly and offline.
-const API = "https://api.tosbisim.com/api/v1/devices?q=";
-let remote = null, remoteFor = "", timer = null;
+// The page is fully offline: every phone it knows is in DATA, so the search never
+// calls an external index.
 function search() {
-  const q = $("#q").value.trim();
   render();
-  clearTimeout(timer);
-  if (q.length < 2) { remote = null; return; }
-  timer = setTimeout(async () => {
-    try {
-      const r = await fetch(API + encodeURIComponent(q));
-      if (r.ok && $("#q").value.trim() === q) { remote = (await r.json()).results; remoteFor = q.toLowerCase(); render(); }
-    } catch (e) { /* offline: keep the page's own matches */ }
-  }, 300);
 }
 function phoneHtml(t, tier, name, meta, note) {
   return `<div class="phone"><div class="top"><span class="name">${esc(name)}</span>
@@ -136,24 +126,6 @@ function render() {
   let html = "";
   const fams = DATA.families || {};
   const famName = f => f && fams[f] ? (lang === "tr" ? (fams[f].name_tr || fams[f].name) : fams[f].name) : "";
-  if (q && remote && remoteFor === q) {
-    for (const tier of [...ORDER, "unsupported", "unknown"]) {
-      const hits = remote.filter(h => h.tier === tier);
-      if (!hits.length) continue;
-      html += `<h2 style="color:var(--${tier})">${t.tiers[tier]}</h2>`;
-      for (const h of hits) {
-        const own = h.hand ? DATA.phones.find(p => p.source !== "corpus" && p.models.some(m => h.models.includes(m))) : null;
-        let note = own ? (lang === "tr" ? (own.note_tr || own.note) : own.note) : (lang === "tr" ? (h.reason_tr || h.reason) : h.reason);
-        if (h.android && h.android < 11) note = [note, t.oldAndroid(h.android)].filter(Boolean).join(" ");
-        const name = h.name.toLowerCase().startsWith(h.brand.toLowerCase()) ? h.name : `${h.brand} ${h.name}`;
-        html += phoneHtml(t, tier, name, [h.models.slice(0, 4).join(", "), famName(h.family),
-                          h.android >= 11 ? `Android ${h.android}` : ""].filter(Boolean).join(" · "), note);
-      }
-    }
-    $("#list").innerHTML = html || `<p class="empty">${t.none}</p>`;
-    $("#rules").innerHTML = DATA.rules.map(r => `<li>${esc(lang === "tr" ? (r.reason_tr || r.reason) : r.reason)}</li>`).join("");
-    return;
-  }
   for (const tier of ORDER) {
     const phones = DATA.phones.filter(p => p.tier === tier && hit(p));
     if (!phones.length) continue;
