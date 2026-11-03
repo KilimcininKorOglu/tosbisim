@@ -1,0 +1,2 @@
+# Local release credentials for host/release.sh --publish.
+host/release.env

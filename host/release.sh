@@ -27,10 +27,9 @@ if [ "$PUBLISH" = 1 ] || [ "$GITHUB" = 1 ]; then
 fi
 COMMIT=$(git -C "$ROOT" rev-parse --short HEAD)
 if [ "$PUBLISH" = 1 ]; then
-  # The release token lives outside this script, which is published in a public repo:
-  # ~/.hermessim/release.env sets HERMESSIM_RELEASE_TOKEN and optionally HERMESSIM_URL.
-  ENV="$HOME/.hermessim/release.env"
-  [ -f "$ENV" ] || { echo "no $ENV (HERMESSIM_RELEASE_TOKEN=...)"; exit 1; }
+  # Local credentials stay inside the project and are gitignored.
+  ENV="$HERE/release.env"
+  [ -f "$ENV" ] || { echo "no host/release.env (copy host/release.env.example)"; exit 1; }
   # shellcheck disable=SC1090
   . "$ENV"
   [ -n "${HERMESSIM_RELEASE_TOKEN:-}" ] || { echo "$ENV must set HERMESSIM_RELEASE_TOKEN"; exit 1; }
