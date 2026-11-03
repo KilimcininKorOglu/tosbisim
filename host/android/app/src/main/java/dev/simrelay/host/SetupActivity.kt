@@ -492,7 +492,7 @@ class SetupActivity : Activity() {
             batteryBand = text("", 12f, c.secondary).apply { setPadding(0, 0, 0, dp(4)) }
             addView(batteryBand)
         }
-        batterySeek?.progress = (Box.chargeLimit - 50).coerceIn(0, 50)
+        if (batterySeek?.isPressed != true) batterySeek?.progress = (Box.chargeLimit - 50).coerceIn(0, 50)
         updateBatteryLabels()
         batteryCare = card
         return card
