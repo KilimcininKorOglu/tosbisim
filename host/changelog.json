@@ -1,5 +1,11 @@
 [
   {
+    "version": "0.12.26",
+    "code": 62,
+    "en": "Battery care: choose a charge target from 50% to 100% on the host screen or in the client's Host tab. At 60% the host charges below 57%, holds at 60% and tries to drain above 62%; on phones whose kernel exposes charge_behaviour it keeps the charger input on without charging the battery, otherwise it cycles the charger safely. 100% turns it off, and the phone's own threshold is restored when it is turned off.",
+    "tr": "Pil koruması: ana cihaz ekranında veya istemcinin Ana Cihaz sekmesinde %50–%100 arasında bir şarj hedefi seçin. %60'ta ana cihaz %57 altında şarj eder, %60'ta tutar, %62 üstünde deşarj etmeye çalışır; çekirdeği charge_behaviour sunan telefonlarda şarj girişini açık tutup pili şarj etmez, diğerlerinde şarjı güvenli biçimde döngüye alır. %100 kapatır; kapatıldığında telefonun kendi eşiği geri yüklenir."
+  },
+  {
     "version": "0.12.25",
     "code": 61,
     "en": "A host whose TosbiSim data was cleared (in Android's app settings) no longer stops working until the next restart: it gets its Bluetooth permission back by itself and starts again. Problem reports leave out the phone's repetitive call-account messages, so they show more of what TosbiSim itself did.",
