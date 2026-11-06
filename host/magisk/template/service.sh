@@ -75,6 +75,11 @@ until [ "$(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
   # Default SMS app (SMS arrive via SMS_DELIVER to us): the app claims and guards the role itself (Relay
   # guardSmsRole, through simrelayd's time-limited ROLE), once the role service is up.
   dumpsys deviceidle whitelist +$PKG
+  # The host must never be limited in the background. RUN_ANY_IN_BACKGROUND is the Android 10+ switch;
+  # the others are best-effort names OEM ROMs understand (unknown ops simply fail, stderr discarded).
+  for op in RUN_ANY_IN_BACKGROUND RUN_IN_BACKGROUND START_FOREGROUND AUTO_START; do
+    appops set $PKG $op allow 2>/dev/null
+  done
   appops set $PKG WRITE_SETTINGS allow                 # box mode: AOD / wake-gesture keys live in Settings.System
 
   # simrelayd: only the host app's uid (and root) may talk to it; restart if it ever exits.

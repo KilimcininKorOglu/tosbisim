@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.media.AudioManager
 import android.os.IBinder
 import android.provider.Settings
@@ -51,11 +52,25 @@ class HostService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onDestroy() { running = false; super.onDestroy() }
 
+    /**
+     * The task going away must not take the host with it. A foreground service normally survives this, but OEM
+     * task managers still stop it; ask for it back at once (the module's watchdog is the second net). A background
+     * start may be refused on newer Android: the watchdog then restarts it as root.
+     */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        if (Retire.running || Retire.givenBack(this)) return
+        runCatching { startForegroundService(Intent(this, HostService::class.java)) }
+            .onFailure { Log.w(TAG, "task removed, service restart refused: $it") }
+    }
+
     override fun onCreate() {
         super.onCreate()
         // Android 12+ refuses a background foreground-service start without an exemption (an OEM battery manager
         // that dropped ours): stop cleanly and let the module's watchdog start us as root, rather than crash-loop.
-        try { startForeground(1, notification()) } catch (e: Exception) {
+        try {
+            startForeground(1, notification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+        } catch (e: Exception) {
             Log.e(TAG, "startForeground refused: $e")
             Diag.event("host_start_refused", org.json.JSONObject().put("what", e.javaClass.simpleName), withLog = false)
             stopSelf(); return

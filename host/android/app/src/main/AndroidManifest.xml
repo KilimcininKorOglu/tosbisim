@@ -30,6 +30,10 @@
     <!-- Only simrelayd (root) sends these broadcasts; no other app can hold a signature permission of ours. -->
     <permission android:name="dev.simrelay.host.permission.DAEMON" android:protectionLevel="signature" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Android 14+: the host service is a connected-device service (BLE relay); kept long-lived. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <!-- The setup screen asks for the system battery exemption if root did not already whitelist us. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -64,15 +68,20 @@
         <intent><action android:name="android.provider.Telephony.SMS_DELIVER" /></intent>
     </queries>
 
+    <!-- A host phone has no one to reopen the app: a privileged persistent process plus a foreground service keeps
+         it alive through task removal, Doze and OEM task managers. The module's watchdog is the second net. -->
     <application
         android:name=".HostApp"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name">
+        android:label="@string/app_name"
+        android:persistent="true">
 
         <service
             android:name=".HostService"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice"
+            android:stopWithTask="false" />
 
         <!-- Setup checklist: the host app's only screen (setup, and after the box-mode escape gesture). -->
         <activity

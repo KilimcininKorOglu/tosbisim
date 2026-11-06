@@ -450,7 +450,15 @@ class SetupActivity : Activity() {
             Act.CHECK_ROOT -> { Onboarding.checkRoot(this) { moduleAt = 0; again() }; again() }
             Act.INSTALL, Act.REINSTALL -> { Onboarding.installModule(this) { moduleAt = 0; again() }; again() }
             Act.RESTART -> Installer.reboot()
-            Act.FIX -> { Onboarding.fixAll(this) { again() }; again() }
+            Act.FIX -> {
+                Onboarding.fixAll(this) {
+                    again()
+                    // Root normally whitelists us already. If it did not (root refused), ask the system directly;
+                    // the setup screen is in the foreground, so the dialog is allowed here.
+                    if (!Onboarding.batteryExempt(this)) runOnUiThread { requestBatteryExemption() }
+                }
+                again()
+            }
             Act.OPEN_PAIRING -> { Relay.openPairing(); again() }
             Act.PAIR_OTHER -> AlertDialog.Builder(this)
                 .setMessage(getString(R.string.pair_other_confirm, Relay.pairedClient() ?: ""))
@@ -464,6 +472,14 @@ class SetupActivity : Activity() {
             Act.LOCK_SETTINGS -> runCatching { startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS)) }
                 .onFailure { runCatching { startActivity(Intent(Settings.ACTION_SETTINGS)) } }
             Act.MAGISK_GUIDE -> runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://topjohnwu.github.io/Magisk/install.html"))) }
+        }
+    }
+
+    /** Ask Android for the battery exemption (the root whitelist is the primary path). */
+    private fun requestBatteryExemption() {
+        val direct = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))
+        runCatching { startActivity(direct) }.onFailure {
+            runCatching { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }
         }
     }
 

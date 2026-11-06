@@ -232,8 +232,11 @@ object Onboarding {
             var waitRole = false
             try {
                 val pkg = ctx.packageName
+                val background = listOf("RUN_ANY_IN_BACKGROUND", "RUN_IN_BACKGROUND", "START_FOREGROUND", "AUTO_START")
                 val cmds = missing(ctx, RUNTIME).map { "pm grant $pkg $it" } +
-                    listOf("dumpsys deviceidle whitelist +$pkg", "cmd notification allow_dnd $pkg", "cmd notification set_dnd none") +
+                    listOf("dumpsys deviceidle whitelist +$pkg") +
+                    background.map { "appops set $pkg $it allow 2>/dev/null" } +
+                    listOf("cmd notification allow_dnd $pkg", "cmd notification set_dnd none") +
                     if (ctx.getSystemService(android.bluetooth.BluetoothManager::class.java).adapter?.isEnabled != true) listOf("svc bluetooth enable") else emptyList()
                 val r = dev.simrelay.host.Root.sh(cmds.joinToString("; "), 30_000)
                 fixRootRefused = suFailed(r)
