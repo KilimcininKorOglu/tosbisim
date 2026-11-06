@@ -459,6 +459,8 @@ static void *capture_main(void *arg) {
     int crate = opus_rate_ok(g_cfg.capture_rate) ? g_cfg.capture_rate : CAP_RATE;
     int cch = g_cfg.capture_channels == 2 ? 2 : 1;
     pcm_negotiate(g_cfg.card, g_cfg.capture_pcm, 0, crate, cch, &crate, &cch);
+    if (!opus_rate_ok(crate)) crate = CAP_RATE;      // pcmbuf/cframe below assume an Opus rate
+    if (cch < 1 || cch > 2) cch = 1;                 // pcmbuf holds at most one stereo 10 ms frame
     const int cframe = crate / 100;                  // 10 ms
     OpusEncoder *enc = opus_encoder_create(crate, 1, OPUS_APPLICATION_VOIP, &err);
     if (!enc) { LOGE("opus encoder: %d", err); return NULL; }
@@ -566,6 +568,8 @@ static void *playback_main(void *arg) {
     if (want != g_cfg.inject_rate) LOGW("inject rate %d isn't an Opus rate: playing at %d", g_cfg.inject_rate, want);
     int drate = want, ich = g_cfg.inject_channels == 2 ? 2 : 1;
     pcm_negotiate(g_cfg.card, g_cfg.inject_pcm, 1, want, ich, &drate, &ich);
+    if (!opus_rate_ok(drate)) drate = DEC_RATE;      // mono/out below assume an Opus rate
+    if (ich < 1 || ich > 2) ich = 1;                 // out holds at most one stereo 10 ms frame
     int dframe = drate / 100;
     OpusDecoder *dec = opus_decoder_create(drate, 1, &err);
     if (!dec) { LOGE("opus decoder: %d", err); return NULL; }
@@ -581,7 +585,8 @@ static void *playback_main(void *arg) {
         nanosleep(&wait, NULL);
         // The voice path's constraints appear once the modem side runs: ask again, follow a changed rate.
         int r2 = drate, c2 = ich;
-        if (pcm_negotiate(g_cfg.card, g_cfg.inject_pcm, 1, want, ich, &r2, &c2) == 0 && (r2 != drate || c2 != ich)) {
+        if (pcm_negotiate(g_cfg.card, g_cfg.inject_pcm, 1, want, ich, &r2, &c2) == 0 &&
+            (r2 != drate || c2 != ich) && opus_rate_ok(r2) && c2 >= 1 && c2 <= 2) {
             OpusDecoder *d2 = opus_decoder_create(r2, 1, &err);
             if (d2) { opus_decoder_destroy(dec); dec = d2; drate = r2; ich = c2; dframe = drate / 100; period = base * drate / 48000; }
         }
