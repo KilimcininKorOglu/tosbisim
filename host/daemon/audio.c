@@ -107,8 +107,14 @@ static int pcm_negotiate(int card, int device, int playback, int want_rate, int 
     return 0;
 }
 
+// First call loads the library; capture and playback can reach this at the same time on the
+// first CALL_START. The mutex serializes the init and publishes every symbol before any other
+// thread can see ta.open, so nobody can call a half-filled table.
+static pthread_mutex_t ta_lock = PTHREAD_MUTEX_INITIALIZER;
+
 static int ta_load(void) {
-    if (ta.open) return 0;
+    pthread_mutex_lock(&ta_lock);
+    if (ta.open) { pthread_mutex_unlock(&ta_lock); return 0; }
     // The system's own tinyalsa (what stock tinycap/tinyplay use); vendors keep it in different partitions. Our own
     // word size: lib64 for the 64-bit build, lib for the 32-bit one (32-bit Android has no lib64).
 #ifdef __LP64__
@@ -120,15 +126,22 @@ static int ta_load(void) {
                                    "/system_ext/" LIBDIR "/libtinyalsa.so", "/odm/" LIBDIR "/libtinyalsa.so" };
     void *h = NULL;
     for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]) && !h; i++) h = dlopen(paths[i], RTLD_NOW);
-    if (!h) { __android_log_print(ANDROID_LOG_ERROR, "simrelayd", "dlopen libtinyalsa: %s", dlerror()); return -1; }
+    if (!h) {
+        __android_log_print(ANDROID_LOG_ERROR, "simrelayd", "dlopen libtinyalsa: %s", dlerror());
+        pthread_mutex_unlock(&ta_lock);
+        return -1;
+    }
     ta.open = dlsym(h, "pcm_open"); ta.is_ready = dlsym(h, "pcm_is_ready"); ta.get_error = dlsym(h, "pcm_get_error");
     ta.read = dlsym(h, "pcm_read"); ta.write = dlsym(h, "pcm_write"); ta.close = dlsym(h, "pcm_close");
     ta.prepare = dlsym(h, "pcm_prepare");
     ta.stop = dlsym(h, "pcm_stop");
     if (!ta.open || !ta.is_ready || !ta.get_error || !ta.read || !ta.write || !ta.close || !ta.prepare) {
         __android_log_print(ANDROID_LOG_ERROR, "simrelayd", "libtinyalsa: missing symbols");
-        ta.open = NULL; return -1;
+        ta.open = NULL;
+        pthread_mutex_unlock(&ta_lock);
+        return -1;
     }
+    pthread_mutex_unlock(&ta_lock);
     return 0;
 }
 
