@@ -135,6 +135,9 @@ object Daemon {
         if (!probing.compareAndSet(false, true)) return
         exec.execute {
             val r = runCatching { if (connect()) send("HELLO") else null }.getOrNull()
+            // A daemon restart leaves the cached LocalSocket dead. Drop it here, or every probe keeps
+            // failing on the same socket and the setup screen reports the daemon down while it is up.
+            if (r == null) close()
             probing.set(false)
             main.post { done(r) }
         }
