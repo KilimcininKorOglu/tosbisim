@@ -12,7 +12,7 @@ import javax.crypto.spec.SecretKeySpec
 /** Remote mode keys and sealing (protocol/README.md "Remote mode"): HKDF-SHA256 + ChaCha20-Poly1305, nonce12 || ct. */
 class RemoteCrypto(key: ByteArray) {
     companion object {
-        private val SALT = "tosbisim-remote-v1".toByteArray()
+        private val SALT = "hermes-remote-v1".toByteArray()
         val H2C = "h2c".toByteArray()
         val C2H = "c2h".toByteArray()
         private val rng = SecureRandom()

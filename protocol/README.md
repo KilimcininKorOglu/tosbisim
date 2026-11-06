@@ -41,7 +41,7 @@ notifications or writes (MTU is typically 185-517 on iOS, 517 on Android). Reset
 Used when Bluetooth is out of range and the user switched Remote mode on. Bluetooth always wins when both are up.
 
 **Key.** The client makes 32 random bytes `K` and sends `RemoteSetup{enabled, key}` **over Bluetooth only** (the host
-ignores it on the internet path). Derived keys, all HKDF-SHA256 with salt `"tosbisim-remote-v1"`, 32 bytes:
+ignores it on the internet path). Derived keys, all HKDF-SHA256 with salt `"hermes-remote-v1"`, 32 bytes:
 
 | info | use |
 | --- | --- |
