@@ -201,8 +201,8 @@ static int g_io_started = 0;
 static unsigned g_st_sent, g_st_recv, g_st_plc, g_st_fec, g_st_late, g_st_catchup, g_st_caperr;
 static int g_st_peak;
 // Totals since the call began, for the call test (AUDIO?): did the caller's voice reach us, did we play into the call.
-static volatile unsigned g_tot_cap, g_tot_voiced, g_tot_sent, g_tot_played;
-static volatile int g_tot_peak;
+static unsigned g_tot_cap, g_tot_voiced, g_tot_sent, g_tot_played;
+static int g_tot_peak;
 #define VOICED_PEAK 1000          // |sample| above this in a read = someone is talking (silence/comfort noise stays far below)
 static unsigned g_st_played, g_st_depth_max;
 // Measured time audio spends in our buffers (sums over the 5 s window): jitter-buffer depth at each pull, frames
@@ -210,6 +210,21 @@ static unsigned g_st_played, g_st_depth_max;
 static double g_st_jb_sum;
 static unsigned g_st_jb_n, g_st_reopen;
 static volatile int g_stall_ms;          // debug: one playback stall (STALL command)   // playback frames written; max jitter depth   // max |sample| captured in the window: 0 = the caller path is silent
+
+// The capture, playback and I/O threads all update these; the 5 s line snapshots and clears them from
+// the capture thread. One lock (a few instructions per frame) keeps the diagnostics consistent and the
+// accesses defined. Jitter-buffer code takes it while already holding g_jb_lock: that order only.
+static pthread_mutex_t g_stats_lock = PTHREAD_MUTEX_INITIALIZER;
+static void st_inc(unsigned *v) { pthread_mutex_lock(&g_stats_lock); (*v)++; pthread_mutex_unlock(&g_stats_lock); }
+static void st_add(unsigned *v, unsigned n) { pthread_mutex_lock(&g_stats_lock); *v += n; pthread_mutex_unlock(&g_stats_lock); }
+static void st_peak(int *v, int peak) { pthread_mutex_lock(&g_stats_lock); if (peak > *v) *v = peak; pthread_mutex_unlock(&g_stats_lock); }
+static void st_umax(unsigned *v, unsigned value) { pthread_mutex_lock(&g_stats_lock); if (value > *v) *v = value; pthread_mutex_unlock(&g_stats_lock); }
+static void st_jb_depth(int d) {
+    pthread_mutex_lock(&g_stats_lock);
+    g_st_jb_sum += d < 0 ? 0 : d;
+    g_st_jb_n++;
+    pthread_mutex_unlock(&g_stats_lock);
+}
 
 static void set_realtime(const char *who) {
     struct sched_param sp = { .sched_priority = 2 };
@@ -262,7 +277,7 @@ static void jb_put(uint16_t seq, const uint8_t *data, int len) {
     pthread_mutex_lock(&g_jb_lock);
     if (!g_jb_started) { g_jb_started = 1; g_jb_next = seq; g_jb_highest = seq - 1; }
     if ((int16_t)(seq - g_jb_next) < 0) {          // older than the next frame to play
-        g_st_late++;
+        st_inc(&g_st_late);
         if (++consecutive_late >= 50) {             // sender restarted its numbering: resync
             memset(g_jb_valid, 0, sizeof(g_jb_valid));
             g_jb_next = seq; g_jb_highest = seq - 1; g_jb_playing = 0; consecutive_late = 0;
@@ -286,7 +301,7 @@ static void jb_put(uint16_t seq, const uint8_t *data, int len) {
     g_jb_valid[seq & JB_MASK] = 1;
     if ((int16_t)(seq - g_jb_highest) > 0) g_jb_highest = seq;
     if (!g_jb_playing && jb_depth() + 1 >= JB_PRIME) g_jb_playing = 1;
-    g_st_recv++;
+    st_inc(&g_st_recv);
     pthread_mutex_unlock(&g_jb_lock);
 }
 
@@ -312,27 +327,27 @@ static int jb_take(uint8_t *out, int *outlen, int *mode) {
         memcpy(out, s->data, (size_t)s->len);
         *outlen = s->len;
         *mode = 1;
-        g_st_fec++;
+        st_inc(&g_st_fec);
     } else {
         *mode = 2;                                   // depth >= 0 here, so later audio exists
-        g_st_plc++;
+        st_inc(&g_st_plc);
     }
     g_jb_next = next + 1;
     // Adaptive latency: if even the window's minimum depth exceeded JB_KEEP, that much buffering was never
     // needed -> trim it one frame per pull. Converges to the jitter BLE actually has.
     int d = jb_depth();
-    g_st_jb_sum += d < 0 ? 0 : d; g_st_jb_n++;
+    st_jb_depth(d);
     if (d < g_jb_win_min) g_jb_win_min = d;
     if (++g_jb_win_n >= JB_WINDOW) {
         if (g_jb_win_min > JB_KEEP) g_jb_trim = g_jb_win_min - JB_KEEP;
         g_jb_win_min = 1000; g_jb_win_n = 0;
     }
-    if (g_jb_trim > 0 && jb_depth() > JB_KEEP) { g_jb_valid[g_jb_next & JB_MASK] = 0; g_jb_next++; g_jb_trim--; g_st_catchup++; }
+    if (g_jb_trim > 0 && jb_depth() > JB_KEEP) { g_jb_valid[g_jb_next & JB_MASK] = 0; g_jb_next++; g_jb_trim--; st_inc(&g_st_catchup); }
     // Hard cap: above JB_MAX buffered, drop one frame per pull (gentle; never a jump).
     if (jb_depth() > JB_MAX) {
         g_jb_valid[g_jb_next & JB_MASK] = 0;
         g_jb_next++;
-        g_st_catchup++;
+        st_inc(&g_st_catchup);
     }
     pthread_mutex_unlock(&g_jb_lock);
     return 1;
@@ -501,7 +516,7 @@ static void *capture_main(void *arg) {
                 LOGE("capture: %u consecutive errors, giving up for this call (protecting the audio DSP)", consecutive_err);
                 break;
             }
-            g_st_caperr++;
+            st_inc(&g_st_caperr);
             if (consecutive_err >= CAP_SLOW_AFTER) {     // e.g. outgoing call still dialing: voice path not up yet
                 struct timespec slow = { .tv_nsec = 100 * 1000 * 1000 };
                 nanosleep(&slow, NULL);
@@ -519,10 +534,10 @@ static void *capture_main(void *arg) {
         if (cch == 2) for (int i = 0; i < cframe; i++) pcmbuf[i] = (int16_t)(((int)pcmbuf[2 * i] + pcmbuf[2 * i + 1]) / 2);
         int rpeak = 0;
         for (int i = 0; i < cframe; i++) { int a = pcmbuf[i] < 0 ? -pcmbuf[i] : pcmbuf[i]; if (a > rpeak) rpeak = a; }
-        if (rpeak > g_st_peak) g_st_peak = rpeak;
-        if (rpeak > g_tot_peak) g_tot_peak = rpeak;
-        g_tot_cap += CAP_FRAMES_PER_READ;
-        if (rpeak > VOICED_PEAK) g_tot_voiced += CAP_FRAMES_PER_READ;
+        st_peak(&g_st_peak, rpeak);
+        st_peak(&g_tot_peak, rpeak);
+        st_add(&g_tot_cap, CAP_FRAMES_PER_READ);
+        if (rpeak > VOICED_PEAK) st_add(&g_tot_voiced, CAP_FRAMES_PER_READ);
         for (int f = 0; f < CAP_FRAMES_PER_READ; f++) {
         int len = opus_encode(enc, pcmbuf + f * cframe, cframe, pkt + HDR, MAX_PACKET);
         if (len < 0) { LOGW("opus encode: %d", len); continue; }
@@ -533,22 +548,29 @@ static void *capture_main(void *arg) {
         client_send(pkt, HDR + len);
         if (g_cfg.loopback) jb_put(seq, pkt + HDR, len);
         seq++;
-        g_st_sent++;
-        g_tot_sent++;
+        st_inc(&g_st_sent);
+        st_inc(&g_tot_sent);
         }
         frames += CAP_FRAMES_PER_READ;
         if (frames >= 500) {     // ~5 s
             struct timespec now; clock_gettime(CLOCK_MONOTONIC, &now);
             double s = (now.tv_sec - t0.tv_sec) + (now.tv_nsec - t0.tv_nsec) / 1e9;
-            LOGI("audio 5s: sent=%u recv=%u fec=%u plc=%u late=%u catchup=%u caperr=%u peak=%d played=%u depthmax=%u (%.1f fps) "
-                 "| held: jb=%.1fms reopen=%u (tune prime=%d keep=%d period=%d)",
-                 g_st_sent, g_st_recv, g_st_fec, g_st_plc, g_st_late, g_st_catchup, g_st_caperr, g_st_peak,
-                 g_st_played, g_st_depth_max, frames / s,
-                 g_st_jb_n ? g_st_jb_sum / g_st_jb_n * 10.0 : -1.0, g_st_reopen,
-                 g_jb_prime, g_jb_keep, g_play_period);
+            pthread_mutex_lock(&g_stats_lock);
+            unsigned sent = g_st_sent, recv = g_st_recv, fec = g_st_fec, plc = g_st_plc;
+            unsigned late = g_st_late, catchup = g_st_catchup, caperr = g_st_caperr;
+            int peak = g_st_peak;
+            unsigned played = g_st_played, depth_max = g_st_depth_max, reopen = g_st_reopen, jb_n = g_st_jb_n;
+            double jb_sum = g_st_jb_sum;
             g_st_jb_sum = 0; g_st_jb_n = 0; g_st_reopen = 0;
             g_st_sent = g_st_recv = g_st_fec = g_st_plc = g_st_late = g_st_catchup = g_st_caperr = 0;
             g_st_peak = 0; g_st_played = 0; g_st_depth_max = 0;
+            pthread_mutex_unlock(&g_stats_lock);
+            LOGI("audio 5s: sent=%u recv=%u fec=%u plc=%u late=%u catchup=%u caperr=%u peak=%d played=%u depthmax=%u (%.1f fps) "
+                 "| held: jb=%.1fms reopen=%u (tune prime=%d keep=%d period=%d)",
+                 sent, recv, fec, plc, late, catchup, caperr, peak,
+                 played, depth_max, frames / s,
+                 jb_n ? jb_sum / jb_n * 10.0 : -1.0, reopen,
+                 g_jb_prime, g_jb_keep, g_play_period);
             frames = 0; t0 = now;
         }
     }
@@ -634,10 +656,10 @@ static void *playback_main(void *arg) {
         }
         if (samples < 0) { samples = dframe; memset(mono, 0, sizeof(mono)); }
 
-        g_st_played++;
-        g_tot_played++;
+        st_inc(&g_st_played);
+        st_inc(&g_tot_played);
         { pthread_mutex_lock(&g_jb_lock); int d = jb_depth();
-          if (g_jb_playing && d > (int)g_st_depth_max) g_st_depth_max = (unsigned)d; pthread_mutex_unlock(&g_jb_lock); }
+          if (g_jb_playing) st_umax(&g_st_depth_max, d < 0 ? 0 : (unsigned)d); pthread_mutex_unlock(&g_jb_lock); }
         if (ich == 2) {
             for (int i = 0; i < samples; i++) { out[2 * i] = mono[i]; out[2 * i + 1] = mono[i]; }
             if (ta.write(pcm, out, (unsigned)samples * 2 * sizeof(int16_t)) != 0) { if (log_throttle(&werr_log, 2)) LOGW("inject write: %s", ta.get_error(pcm)); ta.prepare(pcm); nanosleep(&wbackoff, NULL); }
@@ -657,7 +679,7 @@ static void *playback_main(void *arg) {
                 pcm_release(LIVE_PLAY, pcm);
                 pcm = pcm_hold(LIVE_PLAY, open_pcm_n(g_cfg.inject_pcm, PCM_OUT, (unsigned)drate, (unsigned)ich,
                                  (unsigned)period, periods));
-                g_st_reopen++;
+                st_inc(&g_st_reopen);
                 slow_windows = 0;
                 if (!pcm) break;
             }
@@ -698,13 +720,19 @@ void audio_tune_get(char *buf, size_t n) {
 }
 
 void audio_totals(char *buf, size_t n) {
-    snprintf(buf, n, "cap=%u voiced=%u sent=%u played=%u peak=%d", g_tot_cap, g_tot_voiced, g_tot_sent, g_tot_played, g_tot_peak);
+    pthread_mutex_lock(&g_stats_lock);
+    unsigned cap = g_tot_cap, voiced = g_tot_voiced, sent = g_tot_sent, played = g_tot_played;
+    int peak = g_tot_peak;
+    pthread_mutex_unlock(&g_stats_lock);
+    snprintf(buf, n, "cap=%u voiced=%u sent=%u played=%u peak=%d", cap, voiced, sent, played, peak);
 }
 
 void audio_call_begin(const audio_cfg_t *cfg) {
+    if (g_call_running) audio_call_end();          // log the old call's totals before clearing them
+    pthread_mutex_lock(&g_stats_lock);
     g_tot_cap = g_tot_voiced = g_tot_sent = g_tot_played = 0;
     g_tot_peak = 0;
-    if (g_call_running) audio_call_end();
+    pthread_mutex_unlock(&g_stats_lock);
     g_cfg = *cfg;
     jb_reset();
     g_call_running = 1;
