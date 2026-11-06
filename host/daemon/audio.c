@@ -351,7 +351,7 @@ static void *io_main(void *arg) {
         if (pf[0].revents & POLLIN) {
             int nfd = accept4(ls, NULL, NULL, SOCK_CLOEXEC);
             if (nfd >= 0) {
-                struct ucred cr;
+                struct ucred cr = { 0 };
                 socklen_t cl = sizeof(cr);
                 if (getsockopt(nfd, SOL_SOCKET, SO_PEERCRED, &cr, &cl) < 0 ||
                     (cr.uid != 0 && (int)cr.uid != g_allowed_uid)) {
