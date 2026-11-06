@@ -124,6 +124,7 @@ static int ctl_read_t(unsigned numid, long long *out, unsigned count, int enumer
 // An enum control's item names, "a|b|c" (the first 64), as ELEM_INFO gives them one index at a time.
 static void enum_items(const struct snd_ctl_elem_info *in, char *out, size_t len) {
     size_t used = 0;
+    if (!len) return;
     out[0] = 0;
     for (unsigned k = 0; k < in->value.enumerated.items && k < 64; k++) {
         struct snd_ctl_elem_info e = *in;
