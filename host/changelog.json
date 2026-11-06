@@ -1,5 +1,29 @@
 [
   {
+    "version": "0.12.25",
+    "code": 61,
+    "en": "A host whose TosbiSim data was cleared (in Android's app settings) no longer stops working until the next restart: it gets its Bluetooth permission back by itself and starts again. Problem reports leave out the phone's repetitive call-account messages, so they show more of what TosbiSim itself did.",
+    "tr": "TosbiSim verileri (Android'in uygulama ayarlarından) silinen bir ana cihaz artık bir sonraki yeniden başlatmaya kadar çalışmaz hale gelmiyor: Bluetooth iznini kendisi geri alıyor ve yeniden başlıyor. Sorun raporları telefonun tekrarlayan arama hesabı mesajlarını dışarıda bırakıyor; böylece TosbiSim'in kendi yaptıklarını daha uzun bir süre gösteriyor."
+  },
+  {
+    "version": "0.12.24",
+    "code": 60,
+    "en": "TosbiSim now works on phones rooted with APatch: it gets root by itself, as with Magisk, and its screens name APatch's own menus. On APatch or KernelSU without a mount metamodule, the install now stops and says what is missing, instead of leaving no app. \"Stop using this phone as a host\" keeps TosbiSim out of the way until it is really gone, also if a restart left it installed, and keeps a note if the phone didn't restart.",
+    "tr": "TosbiSim artık APatch ile rootlanmış telefonlarda da çalışıyor: root iznini Magisk'teki gibi kendisi alıyor ve ekranlarında APatch'in kendi menülerinin adı geçiyor. Bağlama metamodülü olmayan APatch veya KernelSU'da kurulum artık uygulamasız kalmak yerine durup neyin eksik olduğunu söylüyor. \"Bu telefonu ana cihaz olarak kullanmayı bırak\" TosbiSim gerçekten kaldırılana kadar, yeniden başlatmadan sonra kurulu kalsa bile devreye girmiyor ve telefon yeniden başlamazsa bunu kaydediyor."
+  },
+  {
+    "version": "0.12.23",
+    "code": 59,
+    "en": "\"Stop using this phone as a host\" can no longer leave TosbiSim half-removed: if the phone doesn't restart at the end, TosbiSim stays out of the way until it does (no Do Not Disturb, no taking back the phone and messaging apps, no muted calls). A call answered on the host phone itself with another phone app is never muted. Older Galaxy phones with an Exynos 7870 or 7570 chip are now expected to work: a Galaxy J7 Prime passed the call test.",
+    "tr": "\"Bu telefonu ana cihaz olarak kullanmayı bırak\" artık TosbiSim'i yarım kaldırılmış bırakmaz: telefon sonunda yeniden başlamazsa TosbiSim o zamana kadar devreye girmez (Rahatsız Etmeyin'i açmaz, telefon ve mesaj uygulamalarını geri almaz, aramaları sessize almaz). Ana cihazın kendisinde başka bir telefon uygulamasıyla açılan bir arama hiç sessize alınmaz. Exynos 7870 ya da 7570 işlemcili eski Galaxy telefonların artık çalışması bekleniyor: bir Galaxy J7 Prime arama testini geçti."
+  },
+  {
+    "version": "0.12.22",
+    "code": 58,
+    "en": "Older Galaxy phones with an Exynos 7870 or 7570 chip are now expected to work: a Galaxy J7 Prime passed the call test. Every phone still runs its own test before full voice.",
+    "tr": "Exynos 7870 ya da 7570 işlemcili eski Galaxy telefonların artık çalışması bekleniyor: bir Galaxy J7 Prime arama testini geçti. Her telefon tam sesten önce yine kendi testini yapar."
+  },
+  {
     "version": "0.12.21",
     "code": 57,
     "en": "Newer Qualcomm phones that keep their audio files in a per-chip folder (e.g. Xiaomi 11T Pro on Android 13) can now take the call test.",

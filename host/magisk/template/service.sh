@@ -8,6 +8,20 @@ until [ "$(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
 {
   echo "$(date) service.sh start (module $(grep ^version= "$MODDIR/module.prop"))"
 
+  # "Stop using this phone as a host" ran (the app's Retire.givenBack) and this module is still here after the restart
+  # that should have removed it: it stands down as the app does (no silence, no daemon, no app) until it is removed or
+  # installed afresh. Otherwise every boot put Do Not Disturb back on a phone given back (4 Nov 2026).
+  # A new install (customize.sh's flag) wants a host whatever an earlier removal left behind
+  if [ -f "$MODDIR/installed-afresh" ]; then
+    settings delete global tosbisim_given_back >/dev/null 2>&1
+    rm -f /data/adb/service.d/tosbisim-given-back.sh "$MODDIR/installed-afresh"
+  fi
+  GB=$(settings get global tosbisim_given_back 2>/dev/null)
+  if [ -n "$GB" ] && [ "$GB" != null ]; then
+    echo "$(date) given back ($GB): TosbiSim stays off; remove it in the root manager's modules"
+    exit 0
+  fi
+
   # Our logs must show: MediaTek ROMs set log.tag=M, which hides app logs (Redmi Note 8 Pro, 18 Oct).
   setprop log.tag.SimRelayHost I; setprop log.tag.simrelayd I
 
@@ -72,10 +86,21 @@ until [ "$(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
     echo "$u"
   }
   # Root for the host app (self-updates, daemon swap). The phone has no screen to answer Magisk's prompt, which a
-  # headless phone records as a denial (seen 18 Oct): grant it here, as the module that installed the app.
+  # headless phone records as a denial (seen 18 Oct): grant it here, as the module that installed the app, in the root
+  # manager's own list. APatch never prompts: an app is root only in its list (pkg,exclude,allow,uid,to_uid,sctx, read
+  # at boot), and without it every root call failed until the owner found the switch (Mi 11 Pro, 4 Nov 2026).
+  # KernelSU keeps its list in a binary file: there the owner allows TosbiSim in KernelSU → Superuser.
   grant_root() {
-    [ -n "$1" ] && magisk --sqlite "REPLACE INTO policies (uid,policy,until,logging,notification) VALUES($1,2,0,1,0)" \
-      && echo "root granted to $PKG ($1)"
+    [ -n "$1" ] || return
+    if [ -x /data/adb/apd ] && [ -d /data/adb/ap ]; then
+      PC=/data/adb/ap/package_config
+      { grep -q '^pkg,' "$PC" 2>/dev/null || echo "pkg,exclude,allow,uid,to_uid,sctx"; grep -v "^$PKG," "$PC" 2>/dev/null
+        echo "$PKG,0,1,$1,0,u:r:magisk:s0"; } > "$PC.tosbisim" && cat "$PC.tosbisim" > "$PC" && rm -f "$PC.tosbisim" \
+        && echo "root granted to $PKG ($1) in APatch's list"
+    elif command -v magisk >/dev/null; then
+      magisk --sqlite "REPLACE INTO policies (uid,policy,until,logging,notification) VALUES($1,2,0,1,0)" \
+        && echo "root granted to $PKG ($1)"
+    fi
   }
   APP_UID=$(app_uid)
   [ -n "$APP_UID" ] || echo "$(date) WARNING: $PKG uid not found; daemon will accept root only"

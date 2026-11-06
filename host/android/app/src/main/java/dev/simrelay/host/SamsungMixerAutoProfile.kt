@@ -14,8 +14,8 @@ import org.json.JSONObject
  * AP sub-stream that neither Samsung's HAL (eax0-2) nor the LineageOS one (PCM 0/1) plays to; capture on i2s0-pri.
  *
  * Built from the kernel's own controls (simrelayd HAS, with an enum's options): each option's number is this card's.
- * Never on ABOX phones (no card has both, AndroidDumps corpus 2 Nov 2026), and the route is unproven on a real call:
- * the profile is marked experimental and the call test decides. Evidence: tools/corpus/research/exynos-audmixer.md.
+ * Never on ABOX phones (no card has both, AndroidDumps corpus 2 Nov 2026). Proven on a Galaxy J7 Prime that passed the
+ * call test (2 Nov 2026); every phone still runs its own. Evidence: tools/corpus/research/exynos-audmixer.md.
  */
 object SamsungMixerAutoProfile {
     const val MARKER = "AudioMixer CH2 DOUT Select"
@@ -80,7 +80,7 @@ object SamsungMixerAutoProfile {
         val inj = pcm[INJECT_PCM]
         if (cap == null || inj == null) return null to "Samsung AudioMixer: PCM $CAPTURE_PCM=$cap, $INJECT_PCM=$inj"
         // Rates: the AP side of the mixer runs at 48 kHz (its SRC converts the modem's 8/16 kHz); simrelayd negotiates.
-        val json = JSONObject().put("id", "auto/$device").put("router", "exynos-audmixer").put("experimental", true).put("card", 0)
+        val json = JSONObject().put("id", "auto/$device").put("router", "exynos-audmixer").put("card", 0)
             .put("capture", JSONObject().put("pcm", cap).put("pcm_name", CAPTURE_PCM).put("rate", 48000).put("channels", 2)
                 .put("route", "-").put("rec_config", "-"))
             .put("inject", JSONObject().put("pcm", inj).put("pcm_name", INJECT_PCM).put("rate", 48000).put("channels", 2)

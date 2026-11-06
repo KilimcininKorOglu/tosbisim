@@ -1,6 +1,6 @@
 {
-  "comment": "TosbiSim support table, hand-written part. tools/corpus/gen_support.py merges it with the AndroidDumps corpus into profiles/support.json (do not edit that one). Tiers: verified = measured by us; expected = its own firmware shows our auto profile builds (same family as a verified phone), or every Android 11+ phone with its chip does; experimental = our family, but its files need a hand-made profile, or its chip's phones aren't all known to build, or its call route isn't proven on any phone yet; not_yet = an audio family we can't drive yet (Basic mode: SMS, call control, hotspot); unsupported = rules below (can't be rooted). Full voice still needs the in-app call test on every phone.",
-  "version": 3,
+  "comment": "TosbiSim support table, hand-written part. tools/corpus/gen_support.py merges it with the AndroidDumps corpus into profiles/support.json (do not edit that one). Tiers: verified = measured by us; expected = its own firmware shows our auto profile builds (same family as a verified phone), or every Android 11+ phone with its chip does, or its family's route is built from the kernel's own controls and passed a call test on a phone of that family; experimental = our family, but its files need a hand-made profile, or its chip's phones aren't all known to build; not_yet = an audio family we can't drive yet (Basic mode: SMS, call control, hotspot); unsupported = rules below (can't be rooted). Full voice still needs the in-app call test on every phone.",
+  "version": 4,
   "updated": "2026-11-02",
   "phones": [
     {
@@ -293,11 +293,11 @@
         "on7xelte"
       ],
       "soc": "Exynos 7870",
-      "tier": "experimental",
+      "tier": "expected",
       "profile": null,
-      "note": "Exynos 7870. Samsung's updates stop at Android 8.1, so it needs a custom ROM with Android 11 or newer, and custom ROMs have no VoLTE: calls go over 2G/3G. A host on such a ROM sent its sound hardware on 2 Nov 2026: it has every switch of Samsung's digital call route, which the host builds by itself. Not proven on a call yet: the call test decides.",
-      "note_tr": "Exynos 7870. Samsung'un güncellemeleri Android 8.1'de bitiyor; bu yüzden Android 11 veya daha yeni bir özel ROM gerekir ve özel ROM'larda VoLTE yok: aramalar 2G/3G üzerinden yapılır. Böyle bir ROM'daki bir ana cihaz 2 Kasım 2026'da ses donanımını gönderdi: Samsung'un dijital arama yolunun bütün anahtarları var ve ana cihaz bu yolu kendisi kuruyor. Henüz bir aramada kanıtlanmadı: arama testi karar verir.",
-      "source": "anonymous host hardware inventory, 2 Nov 2026; tools/corpus/research/exynos-audmixer.md",
+      "note": "Exynos 7870. Samsung's updates stop at Android 8.1, so it needs a custom ROM with Android 11 or newer, and custom ROMs have no VoLTE: calls go over 2G/3G. Proven on 2 Nov 2026: a J7 Prime on such a ROM passed the call test (full voice) with the call route the host builds by itself.",
+      "note_tr": "Exynos 7870. Samsung'un güncellemeleri Android 8.1'de bitiyor; bu yüzden Android 11 veya daha yeni bir özel ROM gerekir ve özel ROM'larda VoLTE yok: aramalar 2G/3G üzerinden yapılır. 2 Kasım 2026'da kanıtlandı: böyle bir ROM'daki bir J7 Prime, ana cihazın kendi kurduğu arama yoluyla arama testini geçti (tam ses).",
+      "source": "call test passed on a user's host, 2 Nov 2026 (anonymous diagnostics); tools/corpus/research/exynos-audmixer.md",
       "family": "exynos-audmixer"
     },
     {
@@ -844,9 +844,8 @@
       "name": "Samsung Exynos (older: 7870/7570)",
       "name_tr": "Samsung Exynos (eski: 7870/7570)",
       "router": true,
-      "status": "experimental",
-      "about": "Older Galaxy phones with an Exynos 7870 or 7570 chip (J7 Prime, J7 Pro, J7 Nxt, J6, J4, A6, M10…). Samsung's updates stop at Android 10, so they need a custom ROM with Android 11 or newer, and custom ROMs have no VoLTE: calls go over 2G/3G where the operator still runs them. The host builds Samsung's own digital call route (phone as call modem) on the phone itself. Not proven on a call yet: the call test decides.",
-      "about_tr": "Exynos 7870 ya da 7570 işlemcili eski Galaxy telefonlar (J7 Prime, J7 Pro, J7 Nxt, J6, J4, A6, M10…). Samsung'un güncellemeleri Android 10'da bitiyor; bu yüzden Android 11 veya daha yeni bir özel ROM gerekir ve özel ROM'larda VoLTE yok: aramalar, operatör hâlâ sunuyorsa 2G/3G üzerinden yapılır. Ana cihaz, Samsung'un kendi dijital arama yolunu (telefonu arama modemi olarak kullanma) telefonun üzerinde kendisi kurar. Henüz bir aramada kanıtlanmadı: arama testi karar verir.",
+      "about": "Older Galaxy phones with an Exynos 7870 or 7570 chip (J7 Prime, J7 Pro, J7 Nxt, J6, J4, A6, M10…). Samsung's updates stop at Android 10, so they need a custom ROM with Android 11 or newer, and custom ROMs have no VoLTE: calls go over 2G/3G where the operator still runs them. The host builds Samsung's own digital call route (phone as call modem) on the phone itself. Proven on a Galaxy J7 Prime (2 Nov 2026); every phone still runs the call test.",
+      "about_tr": "Exynos 7870 ya da 7570 işlemcili eski Galaxy telefonlar (J7 Prime, J7 Pro, J7 Nxt, J6, J4, A6, M10…). Samsung'un güncellemeleri Android 10'da bitiyor; bu yüzden Android 11 veya daha yeni bir özel ROM gerekir ve özel ROM'larda VoLTE yok: aramalar, operatör hâlâ sunuyorsa 2G/3G üzerinden yapılır. Ana cihaz, Samsung'un kendi dijital arama yolunu (telefonu arama modemi olarak kullanma) telefonun üzerinde kendisi kurar. Bir Galaxy J7 Prime'da kanıtlandı (2 Kasım 2026); her telefon yine de arama testini yapar.",
       "research": "tools/corpus/research/exynos-audmixer.md"
     },
     "qcom-agm": {

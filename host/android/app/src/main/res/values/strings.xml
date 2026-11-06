@@ -34,8 +34,8 @@
     <string name="root_body">Install the Magisk app, patch this phone\'s boot image with it and flash the patched image (Samsung: with Odin). Magisk\'s guide explains each phone type. Then install TosbiSim-Host-Magisk.zip in Magisk → Modules and restart the phone.</string>
     <string name="root_checking">Checking root… if Magisk asks, tap Grant.</string>
     <string name="root_no_su">No root found yet: install Magisk first (see its guide).</string>
-    <string name="root_timeout">Magisk didn\'t answer. Tap Check root again and tap Grant when Magisk asks.</string>
-    <string name="root_denied">Root was refused. In Magisk → Superuser, allow TosbiSim Host, then check again.</string>
+    <string name="root_timeout">%1$s didn\'t answer. Tap Check root again and tap Grant when %1$s asks.</string>
+    <string name="root_denied">Root was refused. In %1$s → Superuser, allow TosbiSim Host, then check again.</string>
     <string name="btn_check_root">Check root</string>
     <string name="btn_magisk_guide">Open the Magisk guide</string>
 
@@ -51,9 +51,9 @@
     <string name="restart_body">The module is installed. Restart the phone: TosbiSim starts by itself and this screen continues from here.</string>
     <string name="btn_restart">Restart now</string>
     <string name="inactive_title">The module isn\'t active</string>
-    <string name="inactive_disabled">It is turned off in Magisk → Modules. Turn it on there, then restart the phone.</string>
-    <string name="inactive_removing">Magisk is set to remove it at the next restart. To keep TosbiSim, install TosbiSim-Host-Magisk.zip in Magisk → Modules again, then restart.</string>
-    <string name="inactive_none">It isn\'t installed any more. Install TosbiSim-Host-Magisk.zip in Magisk → Modules, then restart.</string>
+    <string name="inactive_disabled">It is turned off in %1$s → %2$s. Turn it on there, then restart the phone.</string>
+    <string name="inactive_removing">%1$s is set to remove it at the next restart. To keep TosbiSim, install TosbiSim-Host-Magisk.zip in %1$s → %2$s again, then restart.</string>
+    <string name="inactive_none">It isn\'t installed any more. Install TosbiSim-Host-Magisk.zip in %1$s → %2$s, then restart.</string>
     <string name="inactive_pending">It is installed and waits for a restart.</string>
     <string name="inactive_other">The phone restarted but TosbiSim didn\'t start as a system app. Reinstall the module; if that doesn\'t help, send a report below.</string>
     <string name="btn_reinstall">Reinstall the module</string>
@@ -112,7 +112,7 @@
     <string name="boot_unlocked">Unlocked</string>
     <string name="boot_rooted">Unlocked (root works)</string>
     <string name="boot_locked">Locked</string>
-    <string name="c_root">Root (Magisk)</string>
+    <string name="c_root">Root (%1$s)</string>
     <string name="root_ok">Root works</string>
     <string name="root_unknown">Not checked yet</string>
     <string name="c_module">TosbiSim module</string>
@@ -170,22 +170,22 @@
     <string name="report_failed">Couldn\'t send it now; it goes out when the phone is online.</string>
     <!-- stop using as a host (Retire) -->
     <string name="retire_title">Stop using this phone as a host</string>
-    <string name="retire_note">Gives the phone back for normal use: its sounds, vibration, screen and buttons, its own phone and messaging apps and Wi-Fi come back, your phone forgets it, and TosbiSim is removed. The phone restarts at the end. Magisk and the unlocked bootloader stay.</string>
+    <string name="retire_note">Gives the phone back for normal use: its sounds, vibration, screen and buttons, its own phone and messaging apps and Wi-Fi come back, your phone forgets it, and TosbiSim is removed. The phone restarts at the end. %1$s and the unlocked bootloader stay.</string>
     <string name="retire_btn">Stop using as a host…</string>
     <string name="retire_confirm_title">Remove TosbiSim from this phone?</string>
-    <string name="retire_confirm_body">Your phone will stop getting this SIM\'s calls and messages. To use the phone as a host again later, install TosbiSim-Host-Magisk.zip in Magisk → Modules and pair it again.\n\nMagisk (root) and the unlocked bootloader stay: they were set up before TosbiSim. To make the phone fully stock, uninstall Magisk from its own app afterwards.</string>
+    <string name="retire_confirm_body">Your phone will stop getting this SIM\'s calls and messages. To use the phone as a host again later, install TosbiSim-Host-Magisk.zip in %1$s → %2$s and pair it again.\n\n%1$s (root) and the unlocked bootloader stay: they were set up before TosbiSim. To make the phone fully stock, uninstall %1$s from its own app afterwards.</string>
     <string name="retire_confirm_yes">Remove and restart</string>
     <string name="retire_step_client">Telling your phone…</string>
     <string name="retire_step_settings">Giving back the phone\'s settings…</string>
     <string name="retire_step_restart">Removing TosbiSim. The phone restarts in a moment.</string>
-    <string name="retire_failed">Couldn\'t start the removal, so this phone is a host again, as before. Try again; if it keeps failing, open Magisk → Modules, remove TosbiSim Host and restart the phone.</string>
+    <string name="retire_failed">Couldn\'t start the removal, so this phone is a host again, as before. Try again; if it keeps failing, open %1$s → %2$s, remove TosbiSim Host and restart the phone.</string>
     <!-- audit, 20 Oct 2026 -->
-    <string name="install_busy_body">Installing TosbiSim\'s Magisk module from this app: the background service, its permissions and the silence settings. The phone then restarts once.</string>
-    <string name="btn_open_magisk">Open Magisk</string>
+    <string name="install_busy_body">Installing TosbiSim\'s module from this app: the background service, its permissions and the silence settings. The phone then restarts once.</string>
+    <string name="btn_open_magisk">Open %1$s</string>
     <string name="btn_install_here">Install from this app instead</string>
     <string name="btn_close">Close</string>
     <string name="fix_dialer">Another app is the default phone app.</string>
-    <string name="fix_root_refused">Root refused: Magisk → Superuser → allow TosbiSim Host, then tap Fix now.</string>
+    <string name="fix_root_refused">Root refused: %1$s → Superuser → allow TosbiSim Host, then tap Fix now.</string>
     <string name="perm_phone">phone</string>
     <string name="perm_sms">SMS</string>
     <string name="perm_bluetooth">Bluetooth</string>
@@ -212,8 +212,16 @@
     <string name="mark_wait">in progress</string>
     <string name="retire_step_check">Checking root…</string>
     <string name="retire_in_call">A call is on, so nothing was changed. Try again once it has ended.</string>
-    <string name="retire_no_root">Root was refused, so nothing was changed. In Magisk → Superuser, allow TosbiSim Host, then try again.</string>
+    <string name="retire_no_root">Root was refused, so nothing was changed. In %1$s → Superuser, allow TosbiSim Host, then try again.</string>
     <string name="retire_prepare_failed">Couldn\'t prepare the removal, so nothing was changed. Try again; if it keeps failing, send a report below.</string>
     <string name="retire_unpaired">Your phone was already told and forgot this host: to keep using it, add it again in TosbiSim on your phone (Add host).</string>
     <string name="retire_failed_title">TosbiSim wasn\'t removed</string>
+    <string name="subtitle_given_back">This phone is yours again</string>
+    <string name="given_back_title">Restart to finish removing TosbiSim</string>
+    <string name="given_back_body">TosbiSim gave this phone back, but the phone didn\'t restart, and the removal ends with that restart. Until then TosbiSim stays out of the way: it doesn\'t silence the phone or touch your calls and messages.\n\nIf TosbiSim is still here after the restart, remove it in %1$s → %2$s and restart again.</string>
+    <string name="given_back_after_title">Remove TosbiSim in %1$s</string>
+    <string name="given_back_after_body">TosbiSim gave this phone back, but it is still installed after the restart. It stays out of the way: it doesn\'t silence the phone or touch your calls and messages.\n\nTo finish, remove TosbiSim Host in %1$s → %2$s and restart the phone.</string>
+    <string name="tab_modules_magisk">Modules</string>
+    <string name="tab_modules_apatch">APModule</string>
+    <string name="tab_modules_kernelsu">Module</string>
 </resources>

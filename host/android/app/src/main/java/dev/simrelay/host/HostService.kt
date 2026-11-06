@@ -25,7 +25,7 @@ class HostService : Service() {
          * back (audit, 19 Oct). Never throws.
          */
         fun ensure(ctx: Context) {
-            if (running || !Compat.isHostInstalled(ctx)) return
+            if (running || !Compat.isHostInstalled(ctx) || Retire.givenBack(ctx)) return
             runCatching { ctx.startForegroundService(Intent(ctx, HostService::class.java)) }
                 .onFailure { Log.w(TAG, "host start: $it") }
         }
@@ -62,6 +62,10 @@ class HostService : Service() {
         }
         if (!Compat.isHostInstalled(this)) {      // plain app install (before root): compatibility check only
             Log.i(TAG, "not installed as the host yet; service stays off")
+            stopSelf(); return
+        }
+        if (Retire.givenBack(this)) {             // the removal ran: no host any more, until the app is gone
+            Log.i(TAG, "given back to its owner (${Retire.givenBackState(this)}); service stays off")
             stopSelf(); return
         }
         Log.i(TAG, "host service up; silence: zen_mode=${Settings.Global.getInt(contentResolver, "zen_mode", -1)} " +

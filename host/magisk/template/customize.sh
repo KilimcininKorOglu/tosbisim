@@ -1,4 +1,24 @@
-# SIM Relay host module installer hook (sourced by Magisk). GPL-3.0-or-later.
+# SIM Relay host module installer hook (sourced by Magisk, APatch or KernelSU). GPL-3.0-or-later.
+# APatch and KernelSU leave mounting a module's system folder to a separately installed "metamodule" in their recent
+# versions (their daemon names the feature): without one the app this module carries never appears, and nothing says
+# why (APatch 11282, 4 Nov 2026). Stop here and say what to do instead.
+if [ "$APATCH" = true ] || [ "$KSU" = true ]; then
+  RM=APatch; D=/data/adb/apd; [ "$KSU" = true ] && { RM=KernelSU; D=/data/adb/ksud; }
+  if grep -q metamodule "$D" 2>/dev/null && ! grep -qs '^metamodule=1' /data/adb/modules/*/module.prop /data/adb/modules_update/*/module.prop; then
+    ui_print "! $RM mounts a module's files only through a mount"
+    ui_print "! metamodule, and none is installed: TosbiSim's app"
+    ui_print "! would not appear."
+    abort "! Install one first (e.g. Magic Mount or Hybrid Mount), restart, then install TosbiSim again."
+  fi
+fi
+# A new install means a host is wanted again: the mark "Stop using this phone as a host" left behind (the app's
+# Retire.givenBack) and its boot script go (a tester reinstalled after a removal, 4 Nov 2026). Here, and once more by
+# service.sh at the first boot: a restart right after the install lost this delete on the APatch emulator.
+touch "$MODPATH/installed-afresh"
+if [ "$BOOTMODE" = true ]; then
+  settings delete global tosbisim_given_back >/dev/null 2>&1
+  rm -f /data/adb/service.d/tosbisim-given-back.sh
+fi
 # The daemon for this phone's Android (Magisk's ARCH, from ro.product.cpu.abi): 64-bit, or 32-bit (cheap phones, old
 # ones on custom ROMs). The module carries both; only this one stays.
 case "$ARCH" in

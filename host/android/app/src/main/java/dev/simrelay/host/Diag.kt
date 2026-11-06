@@ -66,7 +66,7 @@ object Diag {
         p.edit().putLong("last_$key", now).putLong("day", day).putInt("today", sentToday + if (dump) 0 else 1).apply()
         val body = facts(kind).put("payload", JSONObject()
             .put("event", name).put("detail", detail)
-            .put("android", Build.VERSION.RELEASE)
+            .put("android", Build.VERSION.RELEASE).put("root", Compat.rootKind(app).id)
             .apply { if (withLog) put("log", recentLog(LOG_BYTES)) })
         passed?.let { body.put("passed", it) }
         File(dir(), "q-$now-${name.take(30)}.json").writeText(body.toString())
@@ -95,16 +95,22 @@ object Diag {
             .put("profile_id", p?.id ?: JSONObject.NULL).put("profile_source", p?.source ?: JSONObject.NULL)
     }
 
-    /** The host log's last [bytes], scrubbed: the persistent host log with root, else this app's own logcat. */
+    /**
+     * The host log's last [bytes], scrubbed and without its noise ([LogTrim]): the persistent host log with root, else
+     * this app's own logcat. Read [LOG_READ] so the excerpt still reaches back far enough once the noise is out.
+     */
     fun recentLog(bytes: Int): String {
-        val raw = Root.sh("tail -c $bytes /data/adb/tosbisim/logs/host.log", 10_000).takeIf { it.ok && it.out.length > 200 }?.out
+        val raw = Root.sh("tail -c $LOG_READ /data/adb/tosbisim/logs/host.log", 10_000).takeIf { it.ok && it.out.length > 200 }?.out
+            ?.let { if (Regex("""^\d\d-\d\d \d\d:""").containsMatchIn(it.take(9))) it else it.substring(it.indexOf('\n') + 1) }   // tail -c starts mid-line
+            ?.let { it.substring(0, it.lastIndexOf('\n') + 1) }   // the file ends mid-line (4 KiB blocks): logcat has it whole
             ?.let { it + newerThan(it) }
             ?: runCatching {
-                val p = ProcessBuilder("logcat", "-d", "-t", "600", "--pid=${android.os.Process.myPid()}").redirectErrorStream(true).start()
+                val p = ProcessBuilder("logcat", "-d", "-t", "2000", "--pid=${android.os.Process.myPid()}").redirectErrorStream(true).start()
                 p.inputStream.bufferedReader().readText().also { p.waitFor() }
             }.getOrDefault("")
-        return Scrub.text(raw.takeLast(bytes))
+        return LogTrim.trim(Scrub.text(raw), bytes)
     }
+    private const val LOG_READ = 64 * 1024
 
     /**
      * The lines logcat holds after the file's last one: it writes the file in whole 4 KiB blocks, so a quiet host's file
@@ -168,7 +174,7 @@ object Diag {
                 val now = System.currentTimeMillis()
                 val body = facts("event").put("payload", JSONObject()
                     .put("event", "user_report").put("detail", detail)
-                    .put("android", Build.VERSION.RELEASE).put("log", recentLog(LOG_BYTES)))
+                    .put("android", Build.VERSION.RELEASE).put("root", Compat.rootKind(app).id).put("log", recentLog(LOG_BYTES)))
                 val code = Api.postStatus("/reports", body).first
                 report = when {
                     code in 200..299 -> Report.SENT
@@ -208,6 +214,57 @@ object Scrub {
     )
 
     fun text(s: String): String = rules.fold(s) { acc, (re, to) -> re.replace(acc, to) }
+}
+
+/**
+ * A report's log excerpt without what crowded out our own lines: on custom ROMs Telecom's phone-account bookkeeping
+ * (an account "modified" several times a second while a SIM flickers) filled most of the 12 KB, and the setup
+ * screen's daemon check repeats every 2 s (J7 Prime report, 5 Nov 2026). Nothing is dropped silently: a left-out
+ * stretch becomes one "…" line with its count and times. Our own lines, other tags, Telecom's call, audio-route and
+ * Bluetooth lines, and lines that aren't logcat lines (stack traces) always stay; only identical repeats in a row
+ * are folded into their first line.
+ */
+object LogTrim {
+    private val TIME = Regex("""^\d\d-\d\d (\d\d:\d\d:\d\d)\.\d{3}""")
+    /** "-v time" ("I/Tag( 123): msg") or threadtime (" 123  456 I Tag: msg"): the tag and the message. */
+    private val LINE = Regex("""^\d\d-\d\d \d\d:\d\d:\d\d\.\d{3}\s+(?:[VDIWEF]/([^(]*?)\s*\(\s*\d+\)|\d+\s+\d+\s+[VDIWEF]\s+(\S[^:]*?)\s*):\s?(.*)$""")
+    /** Telecom keeping its phone-account registry, never about a call's course. */
+    private val NOISE = Regex("""^(PhoneAccountRegistrar: |CallsManager: (handlePhoneAccountChanged|Sending phone-account|updateEmergencyCallNotificationAsync)|(TelecomServiceImpl\$1)?: (registerPhoneAccount|unregisterPhoneAccount|isInEmergencyCall)|AppLabelProxy: )""")
+
+    /** [log] without the noise, its newest [keep] characters, starting at a whole line. */
+    fun trim(log: String, keep: Int): String {
+        val out = StringBuilder()
+        var dropped = 0; var dropFirst = ""; var dropLast = ""
+        var lastKey: String? = null; var repeats = 0; var repeatLast = ""
+        fun endRepeats() { if (repeats > 0) out.append("… the line above ").append(repeats).append(" more times, last at ").append(repeatLast).append('\n'); repeats = 0 }
+        fun endDropped() {
+            if (dropped > 0) out.append("… ").append(dropped).append(" Telecom phone-account lines left out (")
+                .append(dropFirst).append(if (dropLast != dropFirst) "–$dropLast" else "").append(")\n")
+            dropped = 0
+        }
+        for (line in log.split('\n')) {
+            if (line.isEmpty()) continue
+            val m = LINE.find(line)
+            val time = TIME.find(line)?.groupValues?.get(1).orEmpty()
+            if (m != null) {
+                val tag = m.groupValues[1].ifEmpty { m.groupValues[2] }.trim()
+                val msg = m.groupValues[3]
+                if (tag == "Telecom" && NOISE.containsMatchIn(msg)) {
+                    if (dropped == 0) dropFirst = time
+                    dropped++; dropLast = time; continue
+                }
+                val key = "$tag: $msg"
+                if (key == lastKey) { repeats++; repeatLast = time; continue }
+                endRepeats(); endDropped()
+                lastKey = key
+            } else { endRepeats(); endDropped(); lastKey = null }
+            out.append(line).append('\n')
+        }
+        endRepeats(); endDropped()
+        if (out.length <= keep) return out.toString()
+        val tail = out.substring(out.length - keep)
+        return tail.substring(tail.indexOf('\n') + 1)             // the first line was cut: start at the next one
+    }
 }
 
 /** [s] cut into pieces of at most [max] UTF-8 bytes (a frame limit is in bytes; "…" alone is 3). */

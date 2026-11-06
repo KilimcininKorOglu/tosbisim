@@ -1,6 +1,7 @@
 // SIM Relay host. Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
 package dev.simrelay.host
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
@@ -106,12 +107,30 @@ class BleLink(
         radioBack()                                    // checks again; the 30 s limit paces it
     }
 
+    /**
+     * Android 12+: without its Bluetooth permissions every GATT call throws. The module grants them at boot, but
+     * TosbiSim's data cleared in Settings resets them: the service crashed at start, Android gave up after two
+     * crashes, and the module's watchdog saw the process alive (its other parts), so the host stayed dead until
+     * someone opened its screen (J7 Prime, 5 Nov 2026). Now the GATT service waits for them; self-repair grants them.
+     */
+    fun allowed(): Boolean = android.os.Build.VERSION.SDK_INT < 31 ||
+        Onboarding.missing(ctx, listOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE)).isEmpty()
+    private var waitingPermission = false
+    private val permissionCheck: Runnable = Runnable { if (gatt == null) start() }
+
     /** GATT service + advertising; with the radio off (left off, or mid-toggle) STATE_ON calls this again. */
     fun start() {
         if (!radioWatch) {
             radioWatch = true
             ctx.registerReceiver(radioReceiver, android.content.IntentFilter(android.bluetooth.BluetoothAdapter.ACTION_STATE_CHANGED))
         }
+        if (!allowed()) {
+            if (!waitingPermission) { waitingPermission = true; Log.w(TAG, "no Bluetooth permission: GATT service waits for self-repair") }
+            Onboarding.selfHeal(ctx)                       // grants it as root now (then on its own back-off)
+            main.removeCallbacks(permissionCheck); main.postDelayed(permissionCheck, 5_000)
+            return
+        }
+        if (waitingPermission) { waitingPermission = false; Log.i(TAG, "Bluetooth permission back: starting the GATT service") }
         if (bt.adapter?.isEnabled != true) { Log.w(TAG, "Bluetooth is off: GATT service waits for it"); radioBack(); return }
         val service = BluetoothGattService(SERVICE, BluetoothGattService.SERVICE_TYPE_PRIMARY)
         tx = BluetoothGattCharacteristic(CTRL_TX, BluetoothGattCharacteristic.PROPERTY_NOTIFY,
@@ -164,8 +183,10 @@ class BleLink(
     }
 
     /** Devices the stack reports connected that have subscribed to CTRL_TX (now or in an earlier connection). */
-    fun subscribers(): List<BluetoothDevice> =
-        bt.getConnectedDevices(BluetoothProfile.GATT).filter { it.address in subscribed() }
+    fun subscribers(): List<BluetoothDevice> {
+        if (gatt == null) return emptyList()           // no service (radio off, or no permission: the stack would throw)
+        return bt.getConnectedDevices(BluetoothProfile.GATT).filter { it.address in subscribed() }
+    }
 
     fun send(device: BluetoothDevice, payload: ByteArray) {
         val bytes = Framing.frame(payload)

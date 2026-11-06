@@ -117,8 +117,8 @@ object Compat {
     /**
      * The table's verdict corrected by what the host found on this phone: a call-audio profile that fits its own card
      * (Daemon) is what "expected" means, whatever the table guessed from the model or the chip; the call test still
-     * decides. A route no phone has proven on a call yet (the profile says "experimental": Samsung's pre-ABOX Exynos)
-     * stays experimental. Reports keep the table's tier (with the profile's source next to it).
+     * decides. A route no phone has proven on a call yet (a profile saying "experimental": a new family's first
+     * release) stays experimental. Reports keep the table's tier (with the profile's source next to it).
      */
     fun onThisPhone(v: Verdict, profile: Profile?): Verdict = when {
         profile == null || v.tier !in setOf(Tier.EXPERIMENTAL, Tier.NOT_YET, Tier.UNKNOWN) -> v
@@ -144,6 +144,29 @@ object Compat {
     fun magiskInstalled(ctx: Context): Boolean =
         runCatching { ctx.packageManager.getPackageInfo("com.topjohnwu.magisk", 0); true }.getOrDefault(false) ||
             File("/system/bin/su").exists() || File("/sbin/su").exists() || File("/debug_ramdisk/su").exists()
+
+    /**
+     * The root this phone has, as its manager app shows: the screens name that app and its menus, diagnostics report it.
+     * Magisk is what the guide installs; APatch and KernelSU users came anyway (a Mi 11 Pro on APatch, 4 Nov 2026), and
+     * every screen sent them to "Magisk → Superuser". Their manager apps tell them apart without root.
+     */
+    enum class RootKind(val label: String, val modulesTab: Int, val packages: List<String>) {
+        MAGISK("Magisk", R.string.tab_modules_magisk, listOf("com.topjohnwu.magisk")),
+        APATCH("APatch", R.string.tab_modules_apatch, listOf("me.bmax.apatch")),
+        KERNELSU("KernelSU", R.string.tab_modules_kernelsu, listOf("me.weishu.kernelsu", "com.rifsxd.ksunext", "com.sukisu.ultra"));
+        val id get() = name.lowercase()
+    }
+
+    private fun installed(ctx: Context, pkg: String) =
+        runCatching { ctx.packageManager.getPackageInfo(pkg, 0); true }.getOrDefault(false)
+
+    /** APatch or KernelSU when its manager is installed, else Magisk (also a hidden one, under another name). */
+    fun rootKind(ctx: Context): RootKind =
+        listOf(RootKind.APATCH, RootKind.KERNELSU).firstOrNull { k -> k.packages.any { installed(ctx, it) } } ?: RootKind.MAGISK
+
+    /** The root manager's own app, when it can be opened. */
+    fun rootManagerIntent(ctx: Context): android.content.Intent? =
+        rootKind(ctx).packages.firstNotNullOfOrNull { runCatching { ctx.packageManager.getLaunchIntentForPackage(it) }.getOrNull() }
 
     /** Before the host runs: false without Bluetooth LE at all, null while Bluetooth is off. Whether advertising works
      *  shows once the host advertises ([BleLink.advStatus]): no flag answers that ahead of time. */
@@ -181,7 +204,7 @@ object Compat {
     }.getOrDefault("")
 }
 
-/** Installs the embedded Magisk module (no APK inside: it adopts this installed app) and restarts the phone. */
+/** Installs the embedded module (no APK inside: it adopts this installed app) with the root manager's own installer. */
 object Installer {
     private const val TAG = "SimRelayHost"
     private const val ASSET = "module/tosbisim-host-module.zip"
@@ -199,7 +222,10 @@ object Installer {
         val r = runCatching {
             val zip = File(ctx.cacheDir, "tosbisim-host-module.zip")
             ctx.assets.open(ASSET).use { i -> zip.outputStream().use { i.copyTo(it) } }
-            val r = Root.sh("magisk --install-module ${Root.q(zip.absolutePath)}", 120_000)
+            // APatch and KernelSU install modules with their own daemon; told apart as root by its files, not by app
+            val z = Root.q(zip.absolutePath)
+            val r = Root.sh("if [ -x /data/adb/apd ]; then /data/adb/apd module install $z; " +
+                "elif [ -x /data/adb/ksud ]; then /data/adb/ksud module install $z; else magisk --install-module $z; fi", 120_000)
             r.ok to r.out
         }.getOrElse { false to "$it" }
         Log.i(TAG, "module install ${if (r.first) "ok" else "FAILED"}:\n${r.second.takeLast(800)}")

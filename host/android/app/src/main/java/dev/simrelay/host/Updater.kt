@@ -221,23 +221,29 @@ object Updater {
             val fresh = File(app.cacheDir, "simrelayd")
             // The build customize.sh kept at install (bin/<abi>/simrelayd): a 32-bit phone must never get the 64-bit one
             ZipFile(zip).use { z -> z.getInputStream(z.getEntry("bin/$abi/simrelayd")).use { i -> fresh.outputStream().use { o -> i.copyTo(o) } } }
-            val installedSha = Root.sh("sha256sum /data/adb/modules/simrelay-host/simrelayd").out.substringBefore(' ')
+            // Only a real checksum: with root refused this was su's error text, so every app start "updated" a daemon it
+            // couldn't touch (APatch before its root switch, 4 Nov 2026)
+            val installedSha = Root.sh("sha256sum /data/adb/modules/simrelay-host/simrelayd").out.substringBefore(' ').trim()
+                .takeIf { it.matches(Regex("[0-9a-f]{64}")) }
             val freshSha = sha256(fresh)
             // service.sh went back to simrelayd.prev because this build kept failing to start, and wrote its sha256
             // here: installing it again would only repeat that, at every app start (audit, 20 Oct 2026)
             val rolledBack = Root.sh("cat /data/adb/tosbisim/daemon-rolled-back 2>/dev/null").out
                 .trim().substringBefore(' ').substringBefore('\n').lowercase()
-            if (rolledBack == freshSha) {
+            if (installedSha == null) {
+                Log.w(TAG, "simrelayd: the installed build can't be read (no root?): left as it is")
+            } else if (rolledBack == freshSha) {
                 Log.w(TAG, "simrelayd: this app's build was rolled back by the module after failing; keeping the running one")
-            } else if (installedSha.isNotEmpty() && installedSha != freshSha) {
+            } else if (installedSha != freshSha) {
                 val m = "/data/adb/modules/simrelay-host"
                 // The running build is kept as simrelayd.prev: service.sh goes back to it if the new one won't start
-                Root.sh("cp $m/simrelayd $m/simrelayd.prev; cp ${Root.q(fresh.path)} $m/simrelayd.tmp && chmod 755 $m/simrelayd.tmp && " +
+                val r = Root.sh("cp $m/simrelayd $m/simrelayd.prev; cp ${Root.q(fresh.path)} $m/simrelayd.tmp && chmod 755 $m/simrelayd.tmp && " +
                     "mv -f $m/simrelayd.tmp $m/simrelayd && kill -USR1 \$(pidof simrelayd)")
                 // USR1: the old daemon leaves the host silenced; the new one announces itself (DAEMON_UP -> reconnect)
-                Log.i(TAG, "simrelayd updated from this app version (restarts in 2 s)")
+                if (r.ok) Log.i(TAG, "simrelayd updated from this app version (restarts in 2 s)")
+                else Log.w(TAG, "simrelayd update FAILED: ${r.out.takeLast(120).trim()}")
             }
-            refreshModuleFiles(zip)
+            if (installedSha != null) refreshModuleFiles(zip)               // root calls too: not without root
             fresh.delete(); zip.delete()
         }.onFailure { Log.w(TAG, "simrelayd update check: $it") }
     }

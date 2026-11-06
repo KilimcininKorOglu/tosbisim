@@ -29,7 +29,7 @@ class SamsungMixerAutoProfileTest {
         assertTrue(why, p != null)
         val j = p!!.json
         assertEquals("exynos-audmixer", j.getString("router"))
-        assertTrue(j.getBoolean("experimental"))
+        assertFalse(j.optBoolean("experimental"))                   // proven on this phone, 2 Nov 2026
         assertEquals(0, j.getJSONObject("capture").getInt("pcm"))
         assertEquals(10, j.getJSONObject("inject").getInt("pcm"))
         val c = j.getJSONObject("call_controls")
@@ -84,11 +84,13 @@ class SamsungMixerAutoProfileTest {
         assertTrue(why, "older build" in why)
     }
 
-    @Test fun anUnprovenRouteStaysExperimental() {
+    @Test fun onItsPhoneTheRouteIsExpected() {
         fun v(t: Compat.Tier) = Compat.Verdict(t, "phone", "")
         val p = build().first
-        assertEquals(Compat.Tier.EXPERIMENTAL, Compat.onThisPhone(v(Compat.Tier.NOT_YET), p).tier)
-        assertEquals(Compat.Tier.EXPERIMENTAL, Compat.onThisPhone(v(Compat.Tier.UNKNOWN), p).tier)
-        assertEquals(Compat.Tier.VERIFIED, Compat.onThisPhone(v(Compat.Tier.VERIFIED), p).tier)
+        assertEquals(Compat.Tier.EXPECTED, Compat.onThisPhone(v(Compat.Tier.UNKNOWN), p).tier)
+        // A route still marked unproven (a future family's first release) stays experimental
+        val unproven = Profile(p!!.id, org.json.JSONObject(p.json.toString()).put("experimental", true), "auto")
+        assertEquals(Compat.Tier.EXPERIMENTAL, Compat.onThisPhone(v(Compat.Tier.NOT_YET), unproven).tier)
+        assertEquals(Compat.Tier.VERIFIED, Compat.onThisPhone(v(Compat.Tier.VERIFIED), unproven).tier)
     }
 }

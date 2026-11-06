@@ -143,17 +143,31 @@ class SetupActivity : Activity() {
     // ------------------------------------------------------------------ the journey
 
     private fun model(): Model {
+        if (host && Retire.givenBack(this)) return givenBackModel()
         val m = if (host) hostModel() else setupModel()
         if (Retire.failed == 0) return m
         // The removal stopped (nothing changed, or rolled back to a working host): say why, offer it again
-        val body = listOfNotNull(getString(Retire.failed), if (Retire.unpaired) getString(R.string.retire_unpaired) else null)
+        val body = listOfNotNull(rs(Retire.failed), if (Retire.unpaired) getString(R.string.retire_unpaired) else null)
         return m.copy(step = 0, steps = 0, card = Card(getString(R.string.retire_failed_title), body.joinToString("\n\n"), Mark.FAIL,
             Btn(getString(R.string.btn_retry), Act.RETIRE), Btn(getString(R.string.btn_close), Act.RETIRE_DISMISS)))
     }
 
-    /** Magisk's own app, when it can be opened (a hidden Magisk has another package name). */
-    private fun magiskIntent(): Intent? = runCatching { packageManager.getLaunchIntentForPackage("com.topjohnwu.magisk") }.getOrNull()
-    private fun magiskBtn() = if (magiskIntent() != null) Btn(getString(R.string.btn_open_magisk), Act.OPEN_MAGISK) else null
+    /** The removal ran ([Retire.givenBack]): a restart finishes it, or, if one didn't, the root manager. No root calls. */
+    private fun givenBackModel(): Model {
+        val after = Retire.givenBackState(this) == Retire.Mark.State.STILL_INSTALLED
+        val restart = Btn(getString(R.string.btn_restart), Act.RESTART)
+        val card = if (after) Card(rs(R.string.given_back_after_title), rs(R.string.given_back_after_body), Mark.WARN,
+            magiskBtn() ?: restart, if (magiskBtn() != null) restart else null)
+        else Card(getString(R.string.given_back_title), rs(R.string.given_back_body), Mark.WARN, restart, magiskBtn())
+        return Model(getString(R.string.subtitle_given_back), 0, 0, card, emptyList())
+    }
+
+    /** Strings that name the root manager and its menus: Magisk, APatch or KernelSU ([Compat.rootKind]). */
+    private fun rs(id: Int): String = Compat.rootKind(this).let { k -> getString(id, k.label, getString(k.modulesTab)) }
+
+    /** The root manager's own app, when it can be opened (a hidden Magisk has another package name). */
+    private fun magiskIntent(): Intent? = Compat.rootManagerIntent(this)
+    private fun magiskBtn() = if (magiskIntent() != null) Btn(rs(R.string.btn_open_magisk), Act.OPEN_MAGISK) else null
 
     /** Before root: 1 unlock, 2 root, 3 install, 4 restart; then the host steps. */
     private fun setupModel(): Model {
@@ -169,7 +183,7 @@ class SetupActivity : Activity() {
             Check(getString(R.string.c_support), tierMark(v.tier), tierText(v)),
             Check(getString(R.string.c_boot), if (rooted || boot.unlocked) Mark.OK else Mark.WARN,
                 getString(if (rooted) R.string.boot_rooted else if (boot.unlocked) R.string.boot_unlocked else R.string.boot_locked)),
-            Check(getString(R.string.c_root), when (rootState) {
+            Check(rs(R.string.c_root), when (rootState) {
                 Onboarding.Root.OK -> Mark.OK; Onboarding.Root.CHECKING -> Mark.WAIT
                 Onboarding.Root.UNKNOWN -> Mark.WARN; else -> Mark.FAIL }, rootText(rootState)),
             Check(getString(R.string.c_bluetooth), when (ble) { true -> Mark.OK; false -> Mark.FAIL; null -> Mark.WARN },
@@ -293,7 +307,7 @@ class SetupActivity : Activity() {
                 Btn(getString(R.string.btn_reinstall), Act.REINSTALL), Btn(getString(R.string.btn_restart), Act.RESTART)))
             !permsOk || !btOn -> at(5, Card(getString(R.string.fix_title),
                 (problems(runtimeMissing, sms, dialer, battery, silent, btOn) +
-                    getString(if (Onboarding.fixRootRefused) R.string.fix_root_refused else R.string.fix_hint)).joinToString("\n"), Mark.WARN,
+                    rs(if (Onboarding.fixRootRefused) R.string.fix_root_refused else R.string.fix_hint)).joinToString("\n"), Mark.WARN,
                 Btn(getString(if (fixing) R.string.btn_fixing else R.string.btn_fix), if (fixing) null else Act.FIX, !fixing)))
             // Unpaired: ready for the first iPhone, nothing to open.
             locked -> at(5, Card(getString(R.string.lock_title), getString(R.string.lock_body), Mark.WARN,
@@ -342,7 +356,7 @@ class SetupActivity : Activity() {
 
     private fun inactive(): Card {
         val m = moduleNow()
-        val why = getString(when (m) {
+        val why = rs(when (m) {
             Onboarding.Module.DISABLED -> R.string.inactive_disabled
             Onboarding.Module.REMOVING -> R.string.inactive_removing
             Onboarding.Module.NONE -> R.string.inactive_none
@@ -413,7 +427,7 @@ class SetupActivity : Activity() {
         return listOf(t, v.note).filter { it.isNotEmpty() }.joinToString("\n")
     }
 
-    private fun rootText(r: Onboarding.Root) = getString(when (r) {
+    private fun rootText(r: Onboarding.Root) = rs(when (r) {
         Onboarding.Root.OK -> R.string.root_ok; Onboarding.Root.CHECKING -> R.string.root_checking
         Onboarding.Root.NO_SU -> R.string.root_no_su; Onboarding.Root.TIMEOUT -> R.string.root_timeout
         Onboarding.Root.DENIED -> R.string.root_denied; Onboarding.Root.UNKNOWN -> R.string.root_unknown
@@ -515,17 +529,20 @@ class SetupActivity : Activity() {
             root.addView(text(m.subtitle, 15f, c.secondary).apply { setPadding(0, dp(2), 0, dp(14)) })
             if (m.steps > 0) root.addView(progress(m.step, m.steps))
             root.addView(card(m.card))
-            root.addView(text(getString(R.string.checks_title), 13f, c.secondary, bold = true).apply { setPadding(dp(4), dp(22), 0, dp(6)) })
-            root.addView(LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                background = rounded(c.card, 16)
-                setPadding(dp(14), dp(6), dp(14), dp(6))
-                m.checks.forEach { addView(row(it)) }
-            })
+            if (m.checks.isNotEmpty()) {
+                root.addView(text(getString(R.string.checks_title), 13f, c.secondary, bold = true).apply { setPadding(dp(4), dp(22), 0, dp(6)) })
+                root.addView(LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    background = rounded(c.card, 16)
+                    setPadding(dp(14), dp(6), dp(14), dp(6))
+                    m.checks.forEach { addView(row(it)) }
+                })
+            }
             if (host && Box.chargeSupported) root.addView(batteryCareCard(), lp(top = 14))
             root.addView(diagnostics(), lp(top = 14))
-            // Whenever root works, a broken host too (module turned off, service down): it must be removable
-            if (host || Onboarding.root == Onboarding.Root.OK) root.addView(retireCard(), lp(top = 14))
+            // Whenever root works, a broken host too (module turned off, service down): it must be removable. Not once
+            // the removal ran: only its restart is left.
+            if ((host || Onboarding.root == Onboarding.Root.OK) && !Retire.givenBack(this)) root.addView(retireCard(), lp(top = 14))
             root.addView(text(getString(R.string.host_version, BuildConfigInfo.version(this)), 12f, c.secondary).apply { setPadding(dp(4), dp(16), 0, 0) })
         }
         updateCountdown()
@@ -627,12 +644,12 @@ class SetupActivity : Activity() {
         background = rounded(c.card, 16)
         setPadding(dp(18), dp(14), dp(18), dp(14))
         addView(text(getString(R.string.retire_title), 15f, c.text, bold = true))
-        addView(text(getString(R.string.retire_note), 12.5f, c.secondary).apply { setPadding(0, dp(4), 0, 0) })
+        addView(text(rs(R.string.retire_note), 12.5f, c.secondary).apply { setPadding(0, dp(4), 0, 0) })
         addView(button(Btn(getString(R.string.retire_btn), null), primary = false).apply {
             setTextColor(c.fail)
             setOnClickListener {
                 AlertDialog.Builder(this@SetupActivity).setTitle(R.string.retire_confirm_title)
-                    .setMessage(R.string.retire_confirm_body)
+                    .setMessage(rs(R.string.retire_confirm_body))
                     .setPositiveButton(R.string.retire_confirm_yes) { _, _ -> unlocked { retire() } }
                     .setNegativeButton(R.string.btn_cancel, null).show()
             }

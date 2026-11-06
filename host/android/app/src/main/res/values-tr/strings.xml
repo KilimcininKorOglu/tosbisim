@@ -31,8 +31,8 @@
     <string name="root_body">Magisk uygulamasını kurun, bu telefonun boot imajını onunla yamalayın ve yamalı imajı yükleyin (Samsung: Odin ile). Magisk\'in rehberi her telefon türünü anlatır. Sonra TosbiSim-Host-Magisk.zip dosyasını Magisk → Modüller\'den kurup telefonu yeniden başlatın.</string>
     <string name="root_checking">Root kontrol ediliyor… Magisk sorarsa İzin ver\'e dokunun.</string>
     <string name="root_no_su">Henüz root bulunamadı: önce Magisk\'i kurun (rehberine bakın).</string>
-    <string name="root_timeout">Magisk yanıt vermedi. Root\'u kontrol et\'e yeniden dokunun ve Magisk sorduğunda İzin ver\'e dokunun.</string>
-    <string name="root_denied">Root reddedildi. Magisk → Süper kullanıcı bölümünde TosbiSim Ana Cihaz\'a izin verin ve tekrar kontrol edin.</string>
+    <string name="root_timeout">%1$s yanıt vermedi. Root\'u kontrol et\'e yeniden dokunun ve %1$s sorduğunda İzin ver\'e dokunun.</string>
+    <string name="root_denied">Root reddedildi. %1$s → Süper kullanıcı bölümünde TosbiSim Ana Cihaz\'a izin verin ve tekrar kontrol edin.</string>
     <string name="btn_check_root">Root\'u kontrol et</string>
     <string name="btn_magisk_guide">Magisk rehberini aç</string>
 
@@ -47,9 +47,9 @@
     <string name="restart_body">Modül kuruldu. Telefonu yeniden başlatın: TosbiSim kendiliğinden açılır ve bu ekran kaldığı yerden devam eder.</string>
     <string name="btn_restart">Şimdi yeniden başlat</string>
     <string name="inactive_title">Modül etkin değil</string>
-    <string name="inactive_disabled">Magisk → Modüller\'de kapalı. Orada açın, sonra telefonu yeniden başlatın.</string>
-    <string name="inactive_removing">Magisk onu bir sonraki yeniden başlatmada kaldırmaya ayarlı. TosbiSim\'i tutmak için TosbiSim-Host-Magisk.zip dosyasını Magisk → Modüller\'den yeniden kurun, sonra yeniden başlatın.</string>
-    <string name="inactive_none">Artık kurulu değil. TosbiSim-Host-Magisk.zip dosyasını Magisk → Modüller\'den kurun, sonra yeniden başlatın.</string>
+    <string name="inactive_disabled">%1$s → %2$s bölümünde kapalı. Orada açın, sonra telefonu yeniden başlatın.</string>
+    <string name="inactive_removing">%1$s onu bir sonraki yeniden başlatmada kaldırmaya ayarlı. TosbiSim\'i tutmak için TosbiSim-Host-Magisk.zip dosyasını %1$s → %2$s bölümünden yeniden kurun, sonra yeniden başlatın.</string>
+    <string name="inactive_none">Artık kurulu değil. TosbiSim-Host-Magisk.zip dosyasını %1$s → %2$s bölümünden kurun, sonra yeniden başlatın.</string>
     <string name="inactive_pending">Kurulu ve yeniden başlatmayı bekliyor.</string>
     <string name="inactive_other">Telefon yeniden başladı ama TosbiSim sistem uygulaması olarak açılmadı. Modülü yeniden kurun; işe yaramazsa aşağıdan bir rapor gönderin.</string>
     <string name="btn_reinstall">Modülü yeniden kur</string>
@@ -106,7 +106,7 @@
     <string name="boot_unlocked">Kilidi açık</string>
     <string name="boot_rooted">Kilidi açık (root çalışıyor)</string>
     <string name="boot_locked">Kilitli</string>
-    <string name="c_root">Root (Magisk)</string>
+    <string name="c_root">Root (%1$s)</string>
     <string name="root_ok">Root çalışıyor</string>
     <string name="root_unknown">Henüz kontrol edilmedi</string>
     <string name="c_module">TosbiSim modülü</string>
@@ -163,22 +163,22 @@
     <string name="report_failed">Şu an gönderilemedi; telefon internete bağlanınca gönderilir.</string>
     <!-- stop using as a host (Retire) -->
     <string name="retire_title">Bu telefonu ana cihaz olarak kullanmayı bırak</string>
-    <string name="retire_note">Telefonu normal kullanıma geri verir: sesleri, titreşimi, ekranı ve tuşları, kendi telefon ve mesaj uygulamaları ve Wi-Fi geri gelir, telefonunuz onu unutur ve TosbiSim kaldırılır. Sonunda telefon yeniden başlar. Magisk ve kilidi açılmış önyükleyici kalır.</string>
+    <string name="retire_note">Telefonu normal kullanıma geri verir: sesleri, titreşimi, ekranı ve tuşları, kendi telefon ve mesaj uygulamaları ve Wi-Fi geri gelir, telefonunuz onu unutur ve TosbiSim kaldırılır. Sonunda telefon yeniden başlar. %1$s ve kilidi açılmış önyükleyici kalır.</string>
     <string name="retire_btn">Ana cihaz olarak kullanmayı bırak…</string>
     <string name="retire_confirm_title">TosbiSim bu telefondan kaldırılsın mı?</string>
-    <string name="retire_confirm_body">Telefonunuza bu SIM\'in aramaları ve mesajları artık gelmez. Telefonu daha sonra yeniden ana cihaz yapmak için TosbiSim-Host-Magisk.zip dosyasını Magisk → Modüller\'den kurup yeniden eşleştirin.\n\nMagisk (root) ve kilidi açık önyükleyici kalır: bunlar TosbiSim\'den önce kurulmuştu. Telefonu tamamen fabrika yazılımına döndürmek için ardından Magisk\'i kendi uygulamasından kaldırın.</string>
+    <string name="retire_confirm_body">Telefonunuza bu SIM\'in aramaları ve mesajları artık gelmez. Telefonu daha sonra yeniden ana cihaz yapmak için TosbiSim-Host-Magisk.zip dosyasını %1$s → %2$s bölümünden kurup yeniden eşleştirin.\n\n%1$s (root) ve kilidi açık önyükleyici kalır: bunlar TosbiSim\'den önce kurulmuştu. Telefonu tamamen fabrika yazılımına döndürmek için ardından %1$s uygulamasını kendi içinden kaldırın.</string>
     <string name="retire_confirm_yes">Kaldır ve yeniden başlat</string>
     <string name="retire_step_client">Telefonunuza bildiriliyor…</string>
     <string name="retire_step_settings">Telefonun ayarları geri veriliyor…</string>
     <string name="retire_step_restart">TosbiSim kaldırılıyor. Telefon birazdan yeniden başlayacak.</string>
-    <string name="retire_failed">Kaldırma başlatılamadı; bu telefon eskisi gibi yine ana cihaz. Tekrar deneyin; başarısız olmaya devam ederse Magisk → Modüller\'i açın, TosbiSim Host\'u kaldırın ve telefonu yeniden başlatın.</string>
+    <string name="retire_failed">Kaldırma başlatılamadı; bu telefon eskisi gibi yine ana cihaz. Tekrar deneyin; başarısız olmaya devam ederse %1$s → %2$s bölümünü açın, TosbiSim Host\'u kaldırın ve telefonu yeniden başlatın.</string>
     <!-- audit, 20 Oct 2026 -->
-    <string name="install_busy_body">TosbiSim\'in Magisk modülü bu uygulamadan kuruluyor: arka plan hizmeti, izinleri ve sessizlik ayarları. Ardından telefon bir kez yeniden başlar.</string>
-    <string name="btn_open_magisk">Magisk\'i aç</string>
+    <string name="install_busy_body">TosbiSim\'in modülü bu uygulamadan kuruluyor: arka plan hizmeti, izinleri ve sessizlik ayarları. Ardından telefon bir kez yeniden başlar.</string>
+    <string name="btn_open_magisk">%1$s uygulamasını aç</string>
     <string name="btn_install_here">Bunun yerine bu uygulamadan kur</string>
     <string name="btn_close">Kapat</string>
     <string name="fix_dialer">Varsayılan telefon uygulaması başka bir uygulama.</string>
-    <string name="fix_root_refused">Root reddedildi: Magisk → Süper kullanıcı → TosbiSim Ana Cihaz\'a izin verin, sonra Şimdi düzelt\'e dokunun.</string>
+    <string name="fix_root_refused">Root reddedildi: %1$s → Süper kullanıcı → TosbiSim Ana Cihaz\'a izin verin, sonra Şimdi düzelt\'e dokunun.</string>
     <string name="perm_phone">telefon</string>
     <string name="perm_sms">SMS</string>
     <string name="perm_bluetooth">Bluetooth</string>
@@ -205,8 +205,16 @@
     <string name="mark_wait">sürüyor</string>
     <string name="retire_step_check">Root kontrol ediliyor…</string>
     <string name="retire_in_call">Bir arama sürüyor, bu yüzden hiçbir şey değiştirilmedi. Arama bitince tekrar deneyin.</string>
-    <string name="retire_no_root">Root reddedildi, bu yüzden hiçbir şey değiştirilmedi. Magisk → Süper kullanıcı bölümünde TosbiSim Ana Cihaz\'a izin verin ve tekrar deneyin.</string>
+    <string name="retire_no_root">Root reddedildi, bu yüzden hiçbir şey değiştirilmedi. %1$s → Süper kullanıcı bölümünde TosbiSim Ana Cihaz\'a izin verin ve tekrar deneyin.</string>
     <string name="retire_prepare_failed">Kaldırma hazırlanamadı, bu yüzden hiçbir şey değiştirilmedi. Tekrar deneyin; başarısız olmaya devam ederse aşağıdan bir rapor gönderin.</string>
     <string name="retire_unpaired">Telefonunuza zaten bildirildi ve bu ana cihazı unuttu: kullanmaya devam etmek için telefonunuzdaki TosbiSim\'de yeniden ekleyin (Ana cihaz ekle).</string>
     <string name="retire_failed_title">TosbiSim kaldırılmadı</string>
+    <string name="subtitle_given_back">Bu telefon yeniden sizin</string>
+    <string name="given_back_title">Kaldırmayı bitirmek için yeniden başlatın</string>
+    <string name="given_back_body">TosbiSim bu telefonu size geri verdi ama telefon yeniden başlamadı; kaldırma bu yeniden başlatmayla tamamlanır. O zamana kadar TosbiSim devreye girmez: telefonu sessize almaz, aramalarınıza ve mesajlarınıza karışmaz.\n\nYeniden başlattıktan sonra TosbiSim hâlâ duruyorsa %1$s → %2$s bölümünden kaldırıp telefonu yeniden başlatın.</string>
+    <string name="given_back_after_title">TosbiSim\'i %1$s uygulamasından kaldırın</string>
+    <string name="given_back_after_body">TosbiSim bu telefonu size geri verdi ama yeniden başlattıktan sonra hâlâ kurulu. Devreye girmez: telefonu sessize almaz, aramalarınıza ve mesajlarınıza karışmaz.\n\nBitirmek için %1$s → %2$s bölümünde TosbiSim Host\'u kaldırın ve telefonu yeniden başlatın.</string>
+    <string name="tab_modules_magisk">Modüller</string>
+    <string name="tab_modules_apatch">APModule</string>
+    <string name="tab_modules_kernelsu">Modül</string>
 </resources>

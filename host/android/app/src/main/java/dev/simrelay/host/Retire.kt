@@ -7,6 +7,7 @@ import android.content.Intent
 import android.media.AudioManager
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.provider.Telephony
 import android.telecom.TelecomManager
 import android.util.Log
@@ -27,6 +28,9 @@ import java.util.concurrent.TimeUnit
  * default apps back, turns Wi-Fi on, revokes root and the battery exemption, marks the module for removal, uninstalls
  * the app, deletes TosbiSim's files and restarts the phone (a Magisk module only goes away with a restart). Magisk and
  * the unlocked bootloader stay: they are the user's, not ours.
+ * The script's first act marks the phone as given back ([givenBack]): until the app is gone, nothing makes it a host
+ * again. It works the module out with the root manager's own tool (APatch, KernelSU) and keeps its log until a boot
+ * script sees TosbiSim gone, so a removal that stops short says where.
  */
 object Retire {
     private const val TAG = "SimRelayHost"
@@ -37,6 +41,34 @@ object Retire {
 
     /** Giving the phone back: guards (SMS role, box mode, silence) must not undo it meanwhile. */
     @Volatile var running = false; private set
+
+    /**
+     * The removal script ran: the phone is its owner's again, and the app is no host whatever starts it (a call, an
+     * alarm, the module's watchdog, its screen) until it is gone, or installed afresh. A removal that stopped short left
+     * the app running: it took the phone and SMS roles back, put Do Not Disturb back on and muted a call its owner
+     * answered, and there it even outlived the restarts (Mi 11 Pro on APatch, 4 Nov 2026). Unlike [running] this
+     * outlives the process and the app's data (uninstalling an update wipes it): the script's own root write in
+     * Settings.Global. The script's boot script drops it once the app is gone; the module's installer, on a new install.
+     */
+    fun givenBack(ctx: Context): Boolean = givenBackState(ctx) != Mark.State.NONE
+
+    fun givenBackState(ctx: Context): Mark.State = Mark.state(Settings.Global.getString(ctx.contentResolver, Mark.KEY))
+
+    /** The script's mark. Apart from [Retire]: unit tests load it without Android. */
+    object Mark {
+        const val KEY = "tosbisim_given_back"
+        /** Runs at every boot while the app is still there; once it is gone, drops the mark, the kept log and itself. */
+        const val CLEANER = "/data/adb/service.d/tosbisim-given-back.sh"
+
+        enum class State { NONE, RESTART_PENDING, STILL_INSTALLED }
+
+        /** [mark]: the boot count the script ran in, ":after" once a restart left the app installed. */
+        fun state(mark: String?): State = when {
+            mark.isNullOrEmpty() -> State.NONE
+            mark.endsWith(":after") -> State.STILL_INSTALLED
+            else -> State.RESTART_PENDING
+        }
+    }
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("retire", Context.MODE_PRIVATE)
 
@@ -215,15 +247,36 @@ object Retire {
             |usable() { [ -n "${'$'}1" ] && [ "${'$'}1" != null ] && [ "${'$'}1" != "${'$'}PKG" ] && pm path "${'$'}1" >/dev/null 2>&1; }
             |{
             |echo "${'$'}(date) giving the phone back"
+            |# First, the phone is marked given back: an app that starts again stays no host (Retire.givenBack) until it
+            |# is gone. A boot script checks at every boot; once the app is gone it drops the mark, the log and itself.
+            |settings put global ${Mark.KEY} "${'$'}(settings get global boot_count)"
+            |mkdir -p /data/adb/service.d && cat > ${Mark.CLEANER} <<'END'
+            |#!/system/bin/sh
+            |# TosbiSim's removal, after a restart: finished once the app is gone, else still given back (and said so)
+            |until [ "${'$'}(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
+            |L=/data/local/tmp/tosbisim-removed.log
+            |if pm path $PKG >/dev/null 2>&1; then
+            |  settings put global ${Mark.KEY} "${'$'}(settings get global boot_count):after"
+            |  echo "${'$'}(date) TosbiSim is still installed after a restart" >> ${'$'}L
+            |  exit 0
+            |fi
+            |settings delete global ${Mark.KEY}
+            |grep -q "failures: 0" ${'$'}L 2>/dev/null && ! grep -q "didn't restart" ${'$'}L && rm -f ${'$'}L
+            |rm -f "${'$'}0"
+            |END
+            |chmod 755 ${Mark.CLEANER}
             |# TosbiSim stops first, for good: the app restarted from the module's system copy in the last seconds (pm
             |# uninstall only removes its update) and silenced the phone again before the restart (20 Oct 2026). Without
             |# root and stopped it can't come back before the restart, which removes the module.
             |fail=0
             |pkill -f modules/simrelay-host/service.sh
             |pkill -x simrelayd
-            |[ $uid -gt 0 ] && magisk --sqlite "DELETE FROM policies WHERE uid=$uid"
+            |[ $uid -gt 0 ] && command -v magisk >/dev/null && magisk --sqlite "DELETE FROM policies WHERE uid=$uid"
             |dumpsys deviceidle whitelist -${'$'}PKG
-            |[ -d /data/adb/modules/simrelay-host ] && { touch /data/adb/modules/simrelay-host/remove || fail=1; }
+            |# The module goes at the restart: through the root manager's own tool when it has one (APatch, KernelSU)
+            |if [ -x /data/adb/apd ]; then /data/adb/apd module uninstall simrelay-host || fail=1
+            |elif [ -x /data/adb/ksud ]; then /data/adb/ksud module uninstall simrelay-host || fail=1
+            |elif [ -d /data/adb/modules/simrelay-host ]; then touch /data/adb/modules/simrelay-host/remove || fail=1; fi
             |# An update waiting for the restart (Magisk moves modules_update in at boot) would bring the module back
             |rm -rf /data/adb/modules_update/simrelay-host || fail=1
             |pm uninstall ${'$'}PKG
@@ -269,11 +322,14 @@ object Retire {
             |rm -rf /data/adb/tosbisim /data/local/tmp/simrelay-service.log /data/local/tmp/simrelay-service.log.1 || fail=1
             |echo "${'$'}(date) done (failures: ${'$'}fail), restarting"
             |} >> "${'$'}LOG" 2>&1
-            |# Gone without a trace when every step worked; else the log stays, to say what didn't (audit, 20 Oct 2026)
-            |[ "${'$'}fail" = 0 ] && rm -f "${'$'}LOG"
             |rm -f "${'$'}0"
             |sync; sleep 5                            # Android's own settings files (Do Not Disturb) reach the disk
-            |svc power reboot || reboot
+            |# The log stays until the boot script finds TosbiSim gone (then it goes too, when every step worked): deleted
+            |# here, a restart that never came left no trace (4 Nov 2026). Each way to restart is checked by still running.
+            |svc power reboot
+            |sleep 20; echo "${'$'}(date) still running 20 s after svc power reboot: reboot" >> "${'$'}LOG"; reboot
+            |sleep 20; echo "${'$'}(date) still running: setprop sys.powerctl reboot" >> "${'$'}LOG"; setprop sys.powerctl reboot
+            |sleep 20; echo "${'$'}(date) the phone didn't restart" >> "${'$'}LOG"
             |""".trimMargin()
     }
 }

@@ -201,7 +201,7 @@ object Onboarding {
      * that refuses one got a root call every 10 minutes for ever (audit, 20 Oct 2026). A closed gap starts again at 10.
      */
     @Synchronized fun selfHeal(ctx: Context) {
-        if (Retire.running || !Compat.isHostInstalled(ctx)) return
+        if (Retire.running || Retire.givenBack(ctx) || !Compat.isHostInstalled(ctx)) return
         val now = android.os.SystemClock.elapsedRealtime()
         val gaps = listOfNotNull(
             "permissions".takeIf { missing(ctx, RUNTIME).isNotEmpty() }, "battery".takeIf { !batteryExempt(ctx) },

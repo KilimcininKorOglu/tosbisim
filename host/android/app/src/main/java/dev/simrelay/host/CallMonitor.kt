@@ -21,6 +21,8 @@ class CallMonitor : InCallService() {
     }
 
     override fun onCallAdded(call: Call) {
+        // The removal ran: the owner's own call, not ours to relay or silence
+        if (Retire.givenBack(this)) { Log.i(TAG, "call added: phone given back, left alone"); return }
         val cb = object : Call.Callback() {
             override fun onStateChanged(c: Call, state: Int) = CallRegistry.changed(c)
             override fun onConnectionEvent(c: Call, event: String, extras: android.os.Bundle?) = CallRegistry.connectionEvent(c, event)

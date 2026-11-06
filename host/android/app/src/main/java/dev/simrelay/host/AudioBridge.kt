@@ -51,6 +51,7 @@ class AudioBridge(private val adapter: BluetoothAdapter, private val ble: BleLin
         var fails = 0
         while (acceptThread != null) {
             if (!adapter.isEnabled) { Thread.sleep(2000); continue }   // radio off: wait quietly (BleLink rebuilds on STATE_ON)
+            if (!ble.allowed()) { Thread.sleep(2000); continue }       // no Bluetooth permission yet: self-repair grants it
             val srv = try {
                 adapter.listenUsingL2capChannel()      // secure: needs the bonded, encrypted link
             } catch (e: Exception) {

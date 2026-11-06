@@ -52,6 +52,11 @@
     <!-- Pre-root check: is Magisk installed? -->
     <queries>
         <package android:name="com.topjohnwu.magisk" />
+        <!-- Other roots (Compat.rootKind): APatch, KernelSU and its forks -->
+        <package android:name="me.bmax.apatch" />
+        <package android:name="me.weishu.kernelsu" />
+        <package android:name="com.rifsxd.ksunext" />
+        <package android:name="com.sukisu.ultra" />
         <!-- Box mode blocks their network -->
         <package android:name="com.google.android.gms" />
         <package android:name="com.android.vending" />
