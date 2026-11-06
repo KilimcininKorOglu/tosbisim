@@ -979,7 +979,14 @@ int main(int argc, char **argv) {
 
         if (fds[1].revents & POLLIN) drain_ctl_events();
         if (fds[3].revents & POLLIN) box_uevent(uev);
-        for (int i = 0; i < nk; i++) if (fds[5 + i].revents & POLLIN) box_key_event(fds[5 + i].fd);
+        for (int i = 0; i < nk; i++) {
+            if (!(fds[5 + i].revents & POLLIN)) continue;
+            // A device dropped above is closed and -1 now: reread the slot instead of using the fd the
+            // poll was built with, which the audio thread could already have recycled for its socket.
+            int kfd = box_key_fd(i);
+            if (kfd < 0 || kfd != fds[5 + i].fd) continue;
+            box_key_event(kfd);
+        }
 
         if (fds[0].revents & POLLIN) {
             int c = accept4(ls, NULL, NULL, SOCK_CLOEXEC);
