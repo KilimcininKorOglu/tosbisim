@@ -341,6 +341,7 @@ static void clear_device_mutes(void) {
 static managed_t *manage_in(managed_t *list, int *count, const char *name, const long long *want, int n, int write_only) {
     struct snd_ctl_elem_info info;
     if (!*name) return NULL;
+    if (n < 1 || n > MAX_VALUES) { LOGE("'%s': %d value(s) (max %d): not managed", name, n, MAX_VALUES); return NULL; }
     if (ctl_info(name, &info) < 0) { LOGW("no control '%s'", name); return NULL; }
     if (*count == MAX_MANAGED) { LOGE("too many managed controls"); return NULL; }
     if (!value_ok(name, &info, want, n)) return NULL;
