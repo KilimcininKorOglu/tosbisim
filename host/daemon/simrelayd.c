@@ -154,6 +154,7 @@ static int inventory(const char *path) {
     list.space = total;
     list.pids = ids;
     if (ioctl(g_ctl, SNDRV_CTL_IOCTL_ELEM_LIST, &list) < 0) { free(ids); return -1; }
+    if (list.used > total) list.used = total;      // a broken driver must not walk past ids[]
     char tmp[128];
     snprintf(tmp, sizeof(tmp), "%s.tmp", path);
     FILE *f = fopen(tmp, "we");
