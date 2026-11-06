@@ -546,16 +546,22 @@ static void nb_next(void) {
     for (int k = 0; k < g_nnb; k++) {
         if (g_nb[k].want == g_nb[k].done) continue;
         int uid = g_nb[k].uid, on = g_nb[k].want;
-        char script[1024];
-        snprintf(script, sizeof(script),
+        // Build the uid rule with a literal format, then splice it in: the shell command must never
+        // become a format string of its own.
+        char rule[512];
+        if (on)
+            snprintf(rule, sizeof(rule),
+                "$b -w 5 -C " NB_CHAIN " -m owner --uid-owner %d -j REJECT 2>/dev/null || "
+                "$b -w 5 -A " NB_CHAIN " -m owner --uid-owner %d -j REJECT", uid, uid);
+        else
+            snprintf(rule, sizeof(rule),
+                "while $b -w 5 -D " NB_CHAIN " -m owner --uid-owner %d -j REJECT 2>/dev/null; do :; done", uid);
+        char cmd[1200];
+        snprintf(cmd, sizeof(cmd),
             "for b in /system/bin/iptables /system/bin/ip6tables; do "
             "$b -w 5 -N " NB_CHAIN " 2>/dev/null; "                        // chain + jump from OUTPUT, created once
             "$b -w 5 -C OUTPUT -j " NB_CHAIN " 2>/dev/null || $b -w 5 -I OUTPUT 1 -j " NB_CHAIN "; "
-            "%s; done",
-            on ? "$b -w 5 -C " NB_CHAIN " -m owner --uid-owner %1$d -j REJECT 2>/dev/null || $b -w 5 -A " NB_CHAIN " -m owner --uid-owner %1$d -j REJECT"
-               : "while $b -w 5 -D " NB_CHAIN " -m owner --uid-owner %1$d -j REJECT 2>/dev/null; do :; done");
-        char cmd[1200];
-        snprintf(cmd, sizeof(cmd), script, uid);
+            "%s; done", rule);
         char *argv[] = { "/system/bin/sh", "-c", cmd, NULL };
         pid_t pid;
         if (spawn_pid(argv, &pid) != 0) {
