@@ -608,18 +608,58 @@ static void drain_ctl_events(void) {
 }
 
 // ------------------------------------------------------------------ protocol
+//
+// One client connection: the input line assembly plus a small output queue. Replies never call a
+// blocking write: a client that stops reading must not stall the mixer, the keys or the escape
+// gesture. Whatever does not fit the socket is sent on the next POLLOUT.
+typedef struct {
+    int fd;
+    int owner;
+    size_t used;
+    size_t out_used;
+    char buf[1024];
+    char out[4096];
+} conn_t;
 
-static void reply(int fd, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
-static void reply(int fd, const char *fmt, ...) {
+static void conn_close(conn_t *c) {
+    if (c->fd >= 0) close(c->fd);
+    c->fd = -1;
+    c->used = 0;
+    c->out_used = 0;
+}
+
+static void conn_flush(conn_t *c) {
+    while (c->fd >= 0 && c->out_used > 0) {
+        ssize_t n = send(c->fd, c->out, c->out_used, MSG_DONTWAIT | MSG_NOSIGNAL);
+        if (n > 0) {
+            c->out_used -= (size_t)n;
+            if (c->out_used) memmove(c->out, c->out + n, c->out_used);
+            continue;
+        }
+        if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) return;
+        c->out_used = 0;                 // peer gone: the next read sees it and closes the slot
+        return;
+    }
+}
+
+static void reply(conn_t *c, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+static void reply(conn_t *c, const char *fmt, ...) {
     char buf[2048];
     va_list ap;
     va_start(ap, fmt);
     int n = vsnprintf(buf, sizeof(buf) - 1, fmt, ap);
     va_end(ap);
-    if (n < 0) return;
+    if (n < 0 || c->fd < 0) return;
     if (n > (int)sizeof(buf) - 2) n = sizeof(buf) - 2;
     buf[n++] = '\n';
-    if (write(fd, buf, n) < 0) LOGW("reply failed: %s", strerror(errno));
+    if (c->out_used + (size_t)n > sizeof(c->out)) {
+        LOGW("reply queue full on fd %d: dropping the client", c->fd);
+        conn_close(c);
+        return;
+    }
+    memcpy(c->out + c->out_used, buf, (size_t)n);
+    c->out_used += (size_t)n;
+    conn_flush(c);
 }
 
 static int valid_iface(const char *iface) {
@@ -697,11 +737,11 @@ static int set_key(const char *key, const char *val) {
     return -1;
 }
 
-static void handle_line(int fd, char *line) {
+static void handle_line(conn_t *c, char *line) {
     char *cmd = strtok(line, " ");
     if (!cmd) return;
     if (strcmp(cmd, "HELLO") == 0) {
-        reply(fd, "OK simrelayd %s card=%d call=%d session=%d", VERSION, g_card, g_call, g_session);
+        reply(c, "OK simrelayd %s card=%d call=%d session=%d", VERSION, g_card, g_call, g_session);
     } else if (strcmp(cmd, "STATUS") == 0) {
         // Whole names only, until the buffer is full (strncat's size arithmetic overflowed it once full; audit, 20 Oct 2026)
         char names[1800] = "";
@@ -711,84 +751,84 @@ static void handle_line(int fd, char *line) {
             if (w < 0 || (size_t)w >= sizeof(names) - used) { names[used] = 0; break; }
             used += (size_t)w;
         }
-        reply(fd, "OK call=%d session=%d managed=%d silence=%d safe=%d %s", g_call, g_session, g_nm, g_np, g_safe, names);
+        reply(c, "OK call=%d session=%d managed=%d silence=%d safe=%d %s", g_call, g_session, g_nm, g_np, g_safe, names);
     } else if (strcmp(cmd, "SET") == 0) {
         char *key = strtok(NULL, " ");
         char *val = strtok(NULL, "");          // rest of line: control names contain spaces
-        if (!key || !val || set_key(key, val) < 0) reply(fd, "ERR bad SET");
-        else reply(fd, "OK");
+        if (!key || !val || set_key(key, val) < 0) reply(c, "ERR bad SET");
+        else reply(c, "OK");
     } else if (strcmp(cmd, "CALL_START") == 0) {
         char *s = strtok(NULL, " ");
         int session = s ? atoi(s) : 1;
-        if (session != 1 && session != 2) { reply(fd, "ERR session must be 1 or 2"); return; }
+        if (session != 1 && session != 2) { reply(c, "ERR session must be 1 or 2"); return; }
         int n = call_start(session);
-        reply(fd, "OK applied=%d", n);
+        reply(c, "OK applied=%d", n);
     } else if (strcmp(cmd, "IFSTATS") == 0) {
         long long rx = 0, tx = 0;
-        if (ifstats(strtok(NULL, " "), &rx, &tx) < 0) reply(fd, "ERR no such interface");
-        else reply(fd, "OK rx=%lld tx=%lld", rx, tx);
+        if (ifstats(strtok(NULL, " "), &rx, &tx) < 0) reply(c, "ERR no such interface");
+        else reply(c, "OK rx=%lld tx=%lld", rx, tx);
     } else if (strcmp(cmd, "NEIGH") == 0) {
         char list[1400];                                // ~45 devices (a hotspot allows 10-32)
         int n = 0;
-        if (neigh(strtok(NULL, " "), list, sizeof(list), &n) < 0) reply(fd, "ERR bad interface");
-        else reply(fd, "OK %d %s", n, list);
+        if (neigh(strtok(NULL, " "), list, sizeof(list), &n) < 0) reply(c, "ERR bad interface");
+        else reply(c, "OK %d %s", n, list);
     } else if (strcmp(cmd, "CALL_END") == 0) {
         restore_all("CALL_END");
-        reply(fd, "OK");
+        reply(c, "OK");
     } else if (strcmp(cmd, "INVENTORY") == 0) {         // read-only: every control's description, to a root-only file
         // Not during a call: hundreds of ioctls on the mixer the call's routing and re-applies are using
-        if (g_call) { reply(fd, "ERR in call"); return; }
+        if (g_call) { reply(c, "ERR in call"); return; }
         int n = inventory(INVENTORY_FILE);
-        if (n == -1) reply(fd, "ERR no mixer");
-        else if (n < 0) reply(fd, "ERR write failed");
-        else reply(fd, "OK %d controls in " INVENTORY_FILE, n);
+        if (n == -1) reply(c, "ERR no mixer");
+        else if (n < 0) reply(c, "ERR write failed");
+        else reply(c, "OK %d controls in " INVENTORY_FILE, n);
     } else if (strcmp(cmd, "HAS") == 0) {               // does this mixer control exist? (auto profiles)
         char *name = strtok(NULL, "");
         struct snd_ctl_elem_info info;
-        if (!name || ctl_info(name, &info) != 0) { reply(fd, "ERR no such control"); return; }
+        if (!name || ctl_info(name, &info) != 0) { reply(c, "ERR no such control"); return; }
         // An enum's items too: an auto profile picks a route by the option's name, its number comes from this card
         char items[1500] = "";
         if (info.type == SNDRV_CTL_ELEM_TYPE_ENUMERATED) enum_items(&info, items, sizeof(items));
-        reply(fd, "OK count=%u%s%s", info.count, *items ? " items=" : "", items);
+        reply(c, "OK count=%u%s%s", info.count, *items ? " items=" : "", items);
     } else if (strcmp(cmd, "AUDIO?") == 0) {            // call test: did audio flow both ways
         char t[160];
         audio_totals(t, sizeof(t));
-        reply(fd, "OK call=%d session=%d silence=%d %s", g_call, g_session, g_np, t);
+        reply(c, "OK call=%d session=%d silence=%d %s", g_call, g_session, g_np, t);
     } else if (strcmp(cmd, "STALL") == 0) {             // STALL <ms>: debug, one inject-loop stall
         char *v = strtok(NULL, " ");
         audio_stall(v ? atoi(v) : 0);
-        reply(fd, "OK");
+        reply(c, "OK");
     } else if (strcmp(cmd, "TUNE") == 0) {              // TUNE [prime keep period]: audio latency trade-offs
-        char *a = strtok(NULL, " "), *b = strtok(NULL, " "), *c = strtok(NULL, " ");
+        char *prime = strtok(NULL, " "), *keep = strtok(NULL, " "), *period = strtok(NULL, " ");
         char t[80];
-        if (a && b && c && audio_tune(atoi(a), atoi(b), atoi(c)) < 0) { reply(fd, "ERR bad values"); return; }
+        if (prime && keep && period && audio_tune(atoi(prime), atoi(keep), atoi(period)) < 0) { reply(c, "ERR bad values"); return; }
         audio_tune_get(t, sizeof(t));
-        reply(fd, "OK %s", t);
+        reply(c, "OK %s", t);
     } else if (strcmp(cmd, "POWERKEY") == 0) {          // POWERKEY 1|0: box mode blocks the power button
         char *v = strtok(NULL, " ");
         int n = box_power_block(v && atoi(v) == 1);
-        if (n < 0) reply(fd, "ERR no escape gesture on this phone"); else reply(fd, "OK %d", n);
+        if (n < 0) reply(c, "ERR no escape gesture on this phone"); else reply(c, "OK %d", n);
     } else if (strcmp(cmd, "SCREEN_OFF") == 0 || strcmp(cmd, "WAKE") == 0) {
-        reply(fd, box_screen(strcmp(cmd, "WAKE") == 0) == 0 ? "OK" : "ERR spawn failed");
+        reply(c, box_screen(strcmp(cmd, "WAKE") == 0) == 0 ? "OK" : "ERR spawn failed");
     } else if (strcmp(cmd, "ROLE") == 0) {
         char *role = strtok(NULL, " "), *pkg = strtok(NULL, " ");
-        reply(fd, box_role(role, pkg) == 0 ? "OK" : "ERR bad role or package");
+        reply(c, box_role(role, pkg) == 0 ? "OK" : "ERR bad role or package");
     } else if (strcmp(cmd, "NETBLOCK") == 0) {          // NETBLOCK <uid> <0|1>
         char *u = strtok(NULL, " "), *on = strtok(NULL, " ");
-        reply(fd, u && on && box_netblock(atoi(u), atoi(on)) == 0 ? "OK" : "ERR bad uid");
+        reply(c, u && on && box_netblock(atoi(u), atoi(on)) == 0 ? "OK" : "ERR bad uid");
     } else if (strcmp(cmd, "CHARGE?") == 0) {
         const char *node = box_charge_node();
         if (node) {
             char status[160];
             box_charge_status(status, sizeof(status));
-            reply(fd, "OK %s %s", node, status);
-        } else reply(fd, "ERR unsupported");
+            reply(c, "OK %s %s", node, status);
+        } else reply(c, "ERR unsupported");
     } else if (strcmp(cmd, "CHARGE") == 0) {
         char *s = strtok(NULL, " ");
         int rc = box_charge(s ? atoi(s) : -1);
-        reply(fd, rc == 0 ? "OK" : rc == -2 ? "ERR unsupported" : "ERR failed");
+        reply(c, rc == 0 ? "OK" : rc == -2 ? "ERR unsupported" : "ERR failed");
     } else {
-        reply(fd, "ERR unknown command");
+        reply(c, "ERR unknown command");
     }
 }
 
@@ -804,10 +844,8 @@ static int peer_uid(int fd) {
 
 // Two connections: the host app's (the owner: a new one replaces a stale one, and losing it mid-call restores the
 // mixer) and one for root tools (simrelayd --client, adb). A tool's query never displaces the app nor, by closing,
-// ends a call's routing: it did both on 20 Oct 2026 (an AUDIO? during a call restored every control).
-typedef struct { int fd; int owner; size_t used; char buf[1024]; } conn_t;
-
-static void conn_close(conn_t *c) { if (c->fd >= 0) close(c->fd); c->fd = -1; c->used = 0; }
+// ends a call's routing: it did both on 20 Oct 2026 (an AUDIO? during a call restored every control). conn_t is
+// defined with the protocol helpers above.
 
 // Read what's there and run its lines; 0 when the peer has gone. Never blocks: a client whose readiness was stale
 // (POLLHUP, a replaced slot) must not stall the main loop (audit, 20 Oct 2026).
@@ -821,7 +859,8 @@ static int conn_read(conn_t *c) {
     while ((nl = strchr(start, '\n'))) {
         *nl = 0;
         if (nl > start && nl[-1] == '\r') nl[-1] = 0;
-        handle_line(c->fd, start);
+        handle_line(c, start);
+        if (c->fd < 0) return 0;         // reply hit its queue limit and dropped the peer
         start = nl + 1;
     }
     c->used = strlen(start);
@@ -948,8 +987,10 @@ int main(int argc, char **argv) {
     heartbeat.tv_sec += 60;
     while (!g_stop) {
         struct pollfd fds[5 + BOX_MAX_KEYDEVS] = {
-            { .fd = ls, .events = POLLIN }, { .fd = g_ctl, .events = POLLIN }, { .fd = conns[0].fd, .events = POLLIN },
-            { .fd = uev, .events = POLLIN }, { .fd = conns[1].fd, .events = POLLIN },
+            { .fd = ls, .events = POLLIN }, { .fd = g_ctl, .events = POLLIN },
+            { .fd = conns[0].fd, .events = POLLIN | (conns[0].out_used ? POLLOUT : 0) },
+            { .fd = uev, .events = POLLIN },
+            { .fd = conns[1].fd, .events = POLLIN | (conns[1].out_used ? POLLOUT : 0) },
         };
         int nk = box_key_count();
         for (int i = 0; i < nk; i++) fds[5 + i] = (struct pollfd){ .fd = box_key_fd(i), .events = POLLIN };
@@ -989,14 +1030,14 @@ int main(int argc, char **argv) {
         }
 
         if (fds[0].revents & POLLIN) {
-            int c = accept4(ls, NULL, NULL, SOCK_CLOEXEC);
+            int c = accept4(ls, NULL, NULL, SOCK_CLOEXEC | SOCK_NONBLOCK);
             int uid = c >= 0 ? peer_uid(c) : -1;
             if (c >= 0 && uid < 0) { close(c); c = -1; }
             if (c >= 0) {
                 // Without --uid (development) root is the owner, as before
                 int owner = g_allowed_uid == (uid_t)-1 || (uid_t)uid == g_allowed_uid;
                 conn_t *slot = owner ? &conns[0] : &conns[1];
-                if (slot->fd >= 0) { reply(slot->fd, "ERR replaced by a new client"); conn_close(slot); }
+                if (slot->fd >= 0) { reply(slot, "ERR replaced by a new client"); conn_close(slot); }
                 slot->fd = c;
             }
         }
@@ -1005,7 +1046,9 @@ int main(int argc, char **argv) {
             conn_t *c = &conns[k];
             struct pollfd *pf = &fds[k == 0 ? 2 : 4];
             // A slot replaced above holds a new fd: the old one's readiness says nothing about it (fd numbers are reused)
-            if (c->fd < 0 || pf->fd != c->fd || !(pf->revents & (POLLIN | POLLHUP | POLLERR))) continue;
+            if (c->fd < 0 || pf->fd != c->fd) continue;
+            if (pf->revents & POLLOUT) conn_flush(c);
+            if (!(pf->revents & (POLLIN | POLLHUP | POLLERR))) continue;
             if (conn_read(c)) continue;
             LOGI("%s gone", c->owner ? "client" : "tool client");
             if (c->owner && g_call) restore_all("client disconnected mid-call");
