@@ -35,7 +35,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "dev.simrelay.host"
+        applicationId = "com.keremgok.hermessim.host"
         minSdk = 30
         targetSdk = 33   // TODO(M6): 34+ needs foregroundServiceType declarations
         versionCode = 62

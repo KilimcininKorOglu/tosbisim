@@ -32,7 +32,7 @@ set_perm "$MODPATH/simrelayd" 0 0 0755
 # Installed from inside the app (one APK for everyone): the module carries no APK, so take the installed one.
 PRIV="$MODPATH/system/priv-app/SimRelayHost"
 if [ ! -f "$PRIV/SimRelayHost.apk" ]; then
-  APK=$(pm path dev.simrelay.host 2>/dev/null | head -1 | sed 's/^package://')
+  APK=$(pm path com.keremgok.hermessim.host 2>/dev/null | head -1 | sed 's/^package://')
   [ -f "$APK" ] || abort "! Install the HermesSIM Host app first, then install this module from inside it"
   mkdir -p "$PRIV" && cp "$APK" "$PRIV/SimRelayHost.apk" || abort "! could not copy the app"
   set_perm_recursive "$PRIV" 0 0 0755 0644

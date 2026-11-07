@@ -37,7 +37,7 @@ extern char **environ;
 
 #define ESCAPE_WINDOW_NS 5000000000LL
 #define ESCAPE_ACTION "dev.simrelay.host.BOX_ESCAPE"
-#define ESCAPE_RECEIVER "dev.simrelay.host/.DaemonEventReceiver"
+#define ESCAPE_RECEIVER "com.keremgok.hermessim.host/dev.simrelay.host.DaemonEventReceiver"
 
 static int g_keys[BOX_MAX_KEYDEVS];
 static int g_power[BOX_MAX_KEYDEVS], g_grabbed[BOX_MAX_KEYDEVS], g_volup[BOX_MAX_KEYDEVS], g_voldown[BOX_MAX_KEYDEVS];

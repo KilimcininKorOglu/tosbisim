@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Must list EVERY privileged permission dev.simrelay.host requests: this ROM enforces it
+<!-- Must list EVERY privileged permission com.keremgok.hermessim.host requests: this ROM enforces it
      (ro.control_privapp_permissions=enforce) and will not boot otherwise. -->
 <permissions>
-    <privapp-permissions package="dev.simrelay.host">
+    <privapp-permissions package="com.keremgok.hermessim.host">
         <permission name="android.permission.CONTROL_INCALL_EXPERIENCE" />
         <permission name="android.permission.TETHER_PRIVILEGED" />
         <permission name="android.permission.OVERRIDE_WIFI_CONFIG" />

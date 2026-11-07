@@ -1,7 +1,7 @@
 #!/system/bin/sh
 # SIM Relay host — late_start service (root, magisk context). GPL-3.0-or-later.
 MODDIR=${0%/*}
-PKG=dev.simrelay.host
+PKG=com.keremgok.hermessim.host
 LOG=/data/local/tmp/simrelay-service.log
 until [ "$(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
 [ "$(stat -c %s "$LOG" 2>/dev/null || echo 0)" -gt 1000000 ] && mv -f "$LOG" "$LOG.1"     # one generation kept
@@ -163,7 +163,7 @@ until [ "$(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
       if [ $n -lt 12 ]; then sleep 5; else sleep 60; fi
       n=$((n + 1))
       pidof $PKG >/dev/null && continue
-      am start-foreground-service -n $PKG/.HostService >/dev/null 2>&1
+      am start-foreground-service -n $PKG/dev.simrelay.host.HostService >/dev/null 2>&1
       [ $n -gt 12 ] && echo "$(date) host app was not running: started it"
     done ) &
   echo "$(date) service.sh done (app uid $APP_UID)"

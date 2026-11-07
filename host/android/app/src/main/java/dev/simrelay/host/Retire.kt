@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit
  */
 object Retire {
     private const val TAG = "SimRelayHost"
-    private const val PKG = "dev.simrelay.host"
+    private const val PKG = "com.keremgok.hermessim.host"
     private val STREAMS = intArrayOf(AudioManager.STREAM_SYSTEM, AudioManager.STREAM_RING, AudioManager.STREAM_NOTIFICATION)
     private val exec = Bg.single("retire", daemon = false)
     private val main = Handler(Looper.getMainLooper())
