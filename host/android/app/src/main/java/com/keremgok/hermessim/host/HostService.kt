@@ -136,7 +136,8 @@ class HostService : Service() {
                 else -> Log.i(TAG, "WIFI status: ${HostWifi.status().let { "on=${it.on} reason=${it.reason} away=${it.useWhenAway} saved=${it.savedCount} connected=${it.connectedSsid.isNotEmpty()}" }} " +
                     "hotspot=${Hotspot.isOn(this)} uplink=${HostWifi.uplinkKind()} override=${HostWifi.clientOverride}")
             }
-            "HOTSPOT" -> Hotspot.set(this, intent.getBooleanExtra("on", false)) { ok, d -> Log.i(TAG, "HOTSPOT -> ok=$ok $d") }
+            "HOTSPOT" -> switchHotspot(intent.getBooleanExtra("on", false))
+            "PAUSE_TEST" -> pauseTest(intent)
             // adb debug: build the automatic profile even if a shipped one exists, and log it
             // adb debug: one raw daemon command, e.g. -a DAEMON --es cmd "TUNE 2 1 240"; the answer goes to the log
             "DAEMON" -> intent.getStringExtra("cmd")?.let { c -> Daemon.query(c) { r -> Log.i(TAG, "DAEMON $c -> $r") } }
@@ -154,6 +155,23 @@ class HostService : Service() {
                                       intent.getStringExtra("body") ?: "Test")
         }
         return START_STICKY
+    }
+
+    /** adb debug: --ez on true|false, exactly what a SetHotspot from the iPhone does (the user's switch ends a call pause). */
+    private fun switchHotspot(on: Boolean) {
+        HotspotPause.userSwitched(on)
+        Hotspot.set(this, on) { ok, d -> Log.i(TAG, "HOTSPOT -> ok=$ok $d") }
+    }
+
+    /**
+     * adb test of the call pause without a relayed call (emulators have no call audio): --es offered yes|no|real
+     * (this process only) and/or --es call start|end (what CallRegistry reports for a relayed call).
+     */
+    private fun pauseTest(intent: Intent) {
+        when (intent.getStringExtra("offered")) { "yes" -> Hotspot.testOffered = true; "no" -> Hotspot.testOffered = false; "real" -> Hotspot.testOffered = null }
+        when (intent.getStringExtra("call")) { "start" -> HotspotPause.calls(true, true); "end" -> HotspotPause.calls(false, false) }
+        Log.i(TAG, "PAUSE_TEST: offered=${Hotspot.callPauseOffered(this)} setting=${HotspotPause.setting} paused=${HotspotPause.paused} hotspot=${Hotspot.isOn(this)}")
+        Relay.voiceChanged()
     }
 
     private fun injectSms(from: String, body: String) {
