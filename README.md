@@ -15,7 +15,7 @@ GNU GPL v3. The iPhone app is distributed separately.
 
 ## Which phones work?
 
-See the **[support page](https://kilimcininkoroglu.github.io/tosbisim/)** (also in the host app before you root,
+See the **[support page](https://kilimcininkoroglu.github.io/hermessim/)** (also in the host app before you root,
 and in the iPhone app under Host → Check a phone). Tiers: *verified* (measured by us), *expected* (same audio
 platform as a verified phone), *experimental* (researched, not measured), *unknown*. Whatever the tier, call
 audio switches on only after a short **call test** on your phone; until then the host runs in Basic mode
@@ -26,9 +26,9 @@ Unlocking the bootloader erases the phone and may void its warranty. TosbiSim ne
 
 ## Setting up a host
 
-1. Check your phone on the [support page](https://kilimcininkoroglu.github.io/tosbisim/), then unlock the
+1. Check your phone on the [support page](https://kilimcininkoroglu.github.io/hermessim/), then unlock the
    bootloader and install [Magisk](https://github.com/topjohnwu/Magisk) (see its guide for your phone).
-2. On the phone, download `HermesSIM-Host-<version>-Magisk.zip` from the [Releases page](https://github.com/KilimcininKorOglu/tosbisim/releases).
+2. On the phone, download `HermesSIM-Host-<version>-Magisk.zip` from the [Releases page](https://github.com/KilimcininKorOglu/hermessim/releases).
 3. Open Magisk → *Modules* → *Install from storage* → choose the zip → *Reboot*. TosbiSim Host starts by itself
    after the restart. (There is no separate app to install: Google Play Protect blocks it on many phones; the
    Magisk module carries it.)
@@ -60,9 +60,9 @@ Host: GPL-3.0-or-later ([LICENSE](LICENSE)). Protocol: MIT ([protocol/LICENSE](p
 
 **Eski bir Android telefonu iPhone'unuz için bir SIM kutusuna dönüştürün.** SIM'inizi root'lu yedek bir Android
 telefona takın, çekmeceye koyun; aramalar, mesajlar ve mobil veri Bluetooth ile iPhone'unuza gelsin. Hangi
-telefonların çalıştığını [destek sayfasında](https://kilimcininkoroglu.github.io/tosbisim/) görebilirsiniz. Arama
+telefonların çalıştığını [destek sayfasında](https://kilimcininkoroglu.github.io/hermessim/) görebilirsiniz. Arama
 sesi, her telefonda kısa bir arama testinden sonra açılır. Kurulum: önyükleyici kilidini açıp Magisk kurun,
-`HermesSIM-Host-<sürüm>-Magisk.zip` dosyasını [Releases sayfasından](https://github.com/KilimcininKorOglu/tosbisim/releases) telefona indirin, Magisk → *Modüller* →
+`HermesSIM-Host-<sürüm>-Magisk.zip` dosyasını [Releases sayfasından](https://github.com/KilimcininKorOglu/hermessim/releases) telefona indirin, Magisk → *Modüller* →
 *Depolamadan yükle* ile seçip *Yeniden başlat*'a dokunun (ayrı bir uygulama kurmanız gerekmez). Ardından
 iPhone'dan eşleştirip arama testini yapın. Telefonu geri almak için ekranındaki *Bu telefonu ana cihaz olarak
 kullanmayı bırak*'a dokunun. TosbiSim telefonun IMEI'sini asla değiştirmez.

@@ -2,7 +2,6 @@
 # Generate the public support page (docs/index.html of the public repo) from profiles/support.json, so the page,
 # the host app and the iPhone app always show the same table. GPL-3.0-or-later.
 #   tools/gen-support-page.py [out.html]
-import html
 import json
 import os
 import sys
@@ -67,7 +66,7 @@ a { color:var(--accent); }
   <h2 data-t="rulesTitle"></h2>
   <ul class="rules" id="rules"></ul>
   <footer><span data-t="footer"></span> · <span id="updated"></span> ·
-    <a href="https://github.com/KilimcininKorOglu/tosbisim">GitHub</a></footer>
+    <a href="https://github.com/KilimcininKorOglu/hermessim">GitHub</a></footer>
 </main>
 <script>
 const DATA = __DATA__;
