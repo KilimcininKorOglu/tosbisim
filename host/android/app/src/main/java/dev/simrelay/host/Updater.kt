@@ -158,7 +158,7 @@ object Updater {
         val theirs = info?.signingInfo?.apkContentsSigners?.map { it.toCharsString() }?.toSet()
         val ours = mine.signingInfo?.apkContentsSigners?.map { it.toCharsString() }?.toSet()
         when {
-            info?.packageName != app.packageName -> { apkFile.delete(); set(Update.State.FAILED, "not a TosbiSim Host package") }
+            info?.packageName != app.packageName -> { apkFile.delete(); set(Update.State.FAILED, "not a HermesSIM Host package") }
             // The APK itself must be the advertised, newer version (else it would "install" the same version nightly).
             code <= myCode() || code != (available?.optLong("code") ?: -1L) ->
                 { apkFile.delete(); set(Update.State.FAILED, "the downloaded package isn't version ${available?.optString("version")}") }
@@ -186,7 +186,7 @@ object Updater {
         // Success replaces this process before we get here, usually; if we're still alive, it failed.
         Log.e(TAG, "update install: $out")
         val why = if (out.contains("Permission denied", true) || out.contains("not allowed", true))
-            "root was refused: allow TosbiSim Host in Magisk (the module grants it at the next boot)" else "install failed: ${out.take(120)}"
+            "root was refused: allow HermesSIM Host in Magisk (the module grants it at the next boot)" else "install failed: ${out.take(120)}"
         set(Update.State.READY, why)               // still downloaded and verified: "Update now" can retry
         return why
     }

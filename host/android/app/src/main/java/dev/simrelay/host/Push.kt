@@ -86,7 +86,7 @@ object Push {
     fun test(kind: String) {
         val id = java.util.UUID.randomUUID().toString()
         if (kind == "sms") send("sms", Envelope.newBuilder().setSmsReceived(SmsReceived.newBuilder().setId(id)
-            .setFromRaw("+905550000000").setFromE164("+905550000000").setBody("TosbiSim push test")
+            .setFromRaw("+905550000000").setFromE164("+905550000000").setBody("HermesSIM Host push test")
             .setReceivedMs(System.currentTimeMillis()).setSlot(-1)).build().toByteArray(), id, "test text")
         else send("call", Envelope.newBuilder().setCallEvent(CallEvent.newBuilder().setCallId(id)
             .setState(CallEvent.State.RINGING).setIncoming(true).setNumberRaw("+905550000000").setNumberE164("+905550000000")

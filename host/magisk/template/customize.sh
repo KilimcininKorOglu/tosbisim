@@ -6,9 +6,9 @@ if [ "$APATCH" = true ] || [ "$KSU" = true ]; then
   RM=APatch; D=/data/adb/apd; [ "$KSU" = true ] && { RM=KernelSU; D=/data/adb/ksud; }
   if grep -q metamodule "$D" 2>/dev/null && ! grep -qs '^metamodule=1' /data/adb/modules/*/module.prop /data/adb/modules_update/*/module.prop; then
     ui_print "! $RM mounts a module's files only through a mount"
-    ui_print "! metamodule, and none is installed: TosbiSim's app"
+    ui_print "! metamodule, and none is installed: HermesSIM's app"
     ui_print "! would not appear."
-    abort "! Install one first (e.g. Magic Mount or Hybrid Mount), restart, then install TosbiSim again."
+    abort "! Install one first (e.g. Magic Mount or Hybrid Mount), restart, then install HermesSIM again."
   fi
 fi
 # A new install means a host is wanted again: the mark "Stop using this phone as a host" left behind (the app's
@@ -24,7 +24,7 @@ fi
 case "$ARCH" in
   arm64) ABI=arm64-v8a ;;
   arm) ABI=armeabi-v7a ;;
-  *) abort "! unsupported processor: $ARCH (TosbiSim needs an ARM phone)" ;;
+  *) abort "! unsupported processor: $ARCH (HermesSIM needs an ARM phone)" ;;
 esac
 mv -f "$MODPATH/bin/$ABI/simrelayd" "$MODPATH/simrelayd" || abort "! the module has no daemon for $ABI"
 rm -rf "$MODPATH/bin"
@@ -33,13 +33,13 @@ set_perm "$MODPATH/simrelayd" 0 0 0755
 PRIV="$MODPATH/system/priv-app/SimRelayHost"
 if [ ! -f "$PRIV/SimRelayHost.apk" ]; then
   APK=$(pm path dev.simrelay.host 2>/dev/null | head -1 | sed 's/^package://')
-  [ -f "$APK" ] || abort "! Install the TosbiSim Host app first, then install this module from inside it"
+  [ -f "$APK" ] || abort "! Install the HermesSIM Host app first, then install this module from inside it"
   mkdir -p "$PRIV" && cp "$APK" "$PRIV/SimRelayHost.apk" || abort "! could not copy the app"
   set_perm_recursive "$PRIV" 0 0 0755 0644
-  ui_print "- using the installed TosbiSim Host app ($APK)"
+  ui_print "- using the installed HermesSIM Host app ($APK)"
 fi
-ui_print "- TosbiSim Host is installed."
-ui_print "- Restart the phone: TosbiSim starts by itself and opens"
+ui_print "- HermesSIM Host is installed."
+ui_print "- Restart the phone: HermesSIM starts by itself and opens"
 ui_print "  its screen, ready to pair with your phone."
 # Android keeps a parsed copy of system apps in /data/system/package_cache and, for files on the system
 # partition, only invalidates it on an OTA (mtime is ignored). Drop ours so an updated APK is re-read.

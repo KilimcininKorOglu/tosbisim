@@ -240,7 +240,7 @@ object Sims {
         val sub = info.subscriptionId
         val sm = ctx.getSystemService(SubscriptionManager::class.java)
         // An eSIM switched off may leave the list (nothing to switch back on from the iPhone, and the host has no screen)
-        if (s.hasEnabled() && !s.enabled && info.isEmbedded) return "an eSIM line can't be switched off from TosbiSim yet"
+        if (s.hasEnabled() && !s.enabled && info.isEmbedded) return "an eSIM line can't be switched off from HermesSIM Host yet"
         if (s.hasEnabled()) {
             val ok = call { SubscriptionManager::class.java
                 .getMethod("setUiccApplicationsEnabled", Int::class.java, Boolean::class.java).invoke(sm, sub, s.enabled) }
