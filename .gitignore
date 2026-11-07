@@ -1,2 +1,7 @@
 # Local release credentials for host/release.sh --publish.
 host/release.env
+# Release signing key and its passwords (release.jks + signing.properties). Never commit.
+host/signing/
+# Generated: release output, and the Magisk module packed into the app (host/magisk/pack-embed.sh).
+host/out/
+host/android/app/src/embed/

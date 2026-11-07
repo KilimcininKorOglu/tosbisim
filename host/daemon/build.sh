@@ -6,8 +6,9 @@
 set -eu
 cd "$(dirname "$0")"
 ./deps.sh
-NDK="${ANDROID_NDK_HOME:-$(ls -d "$HOME"/Library/Android/sdk/ndk/* | sort -V | tail -1)}"
-CMAKE="$(ls -d "$HOME"/Library/Android/sdk/cmake/*/bin/cmake 2>/dev/null | sort -V | tail -1 || true)"
+SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+NDK="${ANDROID_NDK_HOME:-$(ls -d "$SDK"/ndk/* | sort -V | tail -1)}"
+CMAKE="$(ls -d "$SDK"/cmake/*/bin/cmake 2>/dev/null | sort -V | tail -1 || true)"
 CMAKE="${CMAKE:-cmake}"
 NINJA="$(dirname "$CMAKE")/ninja"
 [ -x "$NINJA" ] || NINJA=ninja

@@ -7,30 +7,35 @@ plugins {
     id("com.google.protobuf")
 }
 
-// Release signing: the key lives outside the repo (~/.tosbisim/signing.properties + release.jks). Every
-// update must be signed with it, or phones refuse to install it over the previous version. Back it up.
+// Release signing: host/signing/ holds the key (release.jks + signing.properties, gitignored); each value can also
+// come from a HERMESSIM_SIGNING_* environment variable, which wins (CI). Every update must be signed with this key,
+// or phones refuse to install it over the previous version. Back it up.
+val signingDir = rootProject.file("../signing")
 val signingProps = Properties().apply {
-    val f = file("${System.getProperty("user.home")}/.tosbisim/signing.properties")
+    val f = signingDir.resolve("signing.properties")
     if (f.exists()) f.inputStream().use { load(it) }
 }
+fun signingValue(key: String, env: String): String? =
+    System.getenv(env)?.takeIf { it.isNotEmpty() } ?: signingProps.getProperty(key)
+val releaseStore = signingValue("storeFile", "HERMESSIM_SIGNING_STORE_FILE")
 
 android {
     namespace = "com.keremgok.hermessim.host"
     compileSdk = 36
     signingConfigs {
         create("release") {
-            if (signingProps.isNotEmpty()) {
-                storeFile = file(signingProps.getProperty("storeFile"))
-                storePassword = signingProps.getProperty("storePassword")
-                keyAlias = signingProps.getProperty("keyAlias")
-                keyPassword = signingProps.getProperty("keyPassword")
+            if (releaseStore != null) {
+                storeFile = signingDir.resolve(releaseStore)      // relative to host/signing/, or absolute
+                storePassword = signingValue("storePassword", "HERMESSIM_SIGNING_STORE_PASSWORD")
+                keyAlias = signingValue("keyAlias", "HERMESSIM_SIGNING_KEY_ALIAS")
+                keyPassword = signingValue("keyPassword", "HERMESSIM_SIGNING_KEY_PASSWORD")
             }
         }
     }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false      // reflection on system APIs + protobuf-lite: no shrinking
-            signingConfig = if (signingProps.isNotEmpty()) signingConfigs.getByName("release") else null
+            signingConfig = if (releaseStore != null) signingConfigs.getByName("release") else null
         }
     }
 
