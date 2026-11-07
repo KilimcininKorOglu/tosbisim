@@ -199,6 +199,8 @@ static int g_io_started = 0;
 
 // Stats (reset each 5 s log line).
 static unsigned g_st_sent, g_st_recv, g_st_plc, g_st_fec, g_st_late, g_st_catchup, g_st_caperr;
+// Packets the audio client's socket had no room for (EAGAIN): its reader fell behind, they were dropped (capture thread).
+static unsigned g_st_txdrop;
 static int g_st_peak;
 // Totals since the call began, for the call test (AUDIO?): did the caller's voice reach us, did we play into the call.
 static unsigned g_tot_cap, g_tot_voiced, g_tot_sent, g_tot_played;
@@ -250,8 +252,10 @@ static void client_set(int fd) {
 static void client_send(const uint8_t *buf, int len) {
     pthread_mutex_lock(&g_client_lock);
     int fd = g_client;
-    if (fd >= 0 && send(fd, buf, len, MSG_DONTWAIT | MSG_NOSIGNAL) < 0 && errno != EAGAIN)
-        LOGW("audio send: %s", strerror(errno));
+    if (fd >= 0 && send(fd, buf, len, MSG_DONTWAIT | MSG_NOSIGNAL) < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) st_inc(&g_st_txdrop);
+        else LOGW("audio send: %s", strerror(errno));
+    }
     pthread_mutex_unlock(&g_client_lock);
 }
 
@@ -556,18 +560,18 @@ static void *capture_main(void *arg) {
             struct timespec now; clock_gettime(CLOCK_MONOTONIC, &now);
             double s = (now.tv_sec - t0.tv_sec) + (now.tv_nsec - t0.tv_nsec) / 1e9;
             pthread_mutex_lock(&g_stats_lock);
-            unsigned sent = g_st_sent, recv = g_st_recv, fec = g_st_fec, plc = g_st_plc;
+            unsigned sent = g_st_sent, txdrop = g_st_txdrop, recv = g_st_recv, fec = g_st_fec, plc = g_st_plc;
             unsigned late = g_st_late, catchup = g_st_catchup, caperr = g_st_caperr;
             int peak = g_st_peak;
             unsigned played = g_st_played, depth_max = g_st_depth_max, reopen = g_st_reopen, jb_n = g_st_jb_n;
             double jb_sum = g_st_jb_sum;
             g_st_jb_sum = 0; g_st_jb_n = 0; g_st_reopen = 0;
-            g_st_sent = g_st_recv = g_st_fec = g_st_plc = g_st_late = g_st_catchup = g_st_caperr = 0;
+            g_st_sent = g_st_txdrop = g_st_recv = g_st_fec = g_st_plc = g_st_late = g_st_catchup = g_st_caperr = 0;
             g_st_peak = 0; g_st_played = 0; g_st_depth_max = 0;
             pthread_mutex_unlock(&g_stats_lock);
-            LOGI("audio 5s: sent=%u recv=%u fec=%u plc=%u late=%u catchup=%u caperr=%u peak=%d played=%u depthmax=%u (%.1f fps) "
+            LOGI("audio 5s: sent=%u txdrop=%u recv=%u fec=%u plc=%u late=%u catchup=%u caperr=%u peak=%d played=%u depthmax=%u (%.1f fps) "
                  "| held: jb=%.1fms reopen=%u (tune prime=%d keep=%d period=%d)",
-                 sent, recv, fec, plc, late, catchup, caperr, peak,
+                 sent, txdrop, recv, fec, plc, late, catchup, caperr, peak,
                  played, depth_max, frames / s,
                  jb_n ? jb_sum / jb_n * 10.0 : -1.0, reopen,
                  g_jb_prime, g_jb_keep, g_play_period);
