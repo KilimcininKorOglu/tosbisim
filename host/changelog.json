@@ -1,5 +1,11 @@
 [
   {
+    "version": "0.12.27",
+    "code": 63,
+    "en": "On some phone pairs, calls lost part of the caller's sound: the host sent each 10 ms of sound as its own Bluetooth packet, more than such a link carries, and what didn't fit was dropped. It now sends everything waiting together. Hosts whose hotspot can only use 2.4 GHz, the band Bluetooth carries your calls on, get a new setting: the hotspot turns off while a call's sound is on Bluetooth and comes back when the call ends.",
+    "tr": "Bazı telefon çiftlerinde aramalarda karşı tarafın sesinin bir kısmı kayboluyordu: ana cihaz sesin her 10 ms'sini ayrı bir Bluetooth paketi olarak gönderiyordu, bu da böyle bir bağlantının taşıyabileceğinden fazlaydı ve sığmayanlar atılıyordu. Artık bekleyen her şeyi birlikte gönderiyor. Erişim noktası yalnızca 2,4 GHz kullanabilen ana cihazlara (aramalarınızı taşıyan Bluetooth'un bandı) yeni bir ayar geldi: bir aramanın sesi Bluetooth'tayken erişim noktası kapanır, arama bitince yeniden açılır."
+  },
+  {
     "version": "0.12.26",
     "code": 62,
     "en": "Battery care: choose a charge target from 50% to 100% on the host screen or in the client's Host tab. At 60% the host charges below 57%, holds at 60% and tries to drain above 62%; on phones whose kernel exposes charge_behaviour it keeps the charger input on without charging the battery, otherwise it cycles the charger safely. 100% turns it off, and the phone's own threshold is restored when it is turned off.",
