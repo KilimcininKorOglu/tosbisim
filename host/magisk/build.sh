@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Package the Magisk module: host app (priv-app) + privapp XML + simrelayd (one per ABI) + scripts.
+# Package the Magisk module: host app (priv-app) + privapp XML + hermessimd (one per ABI) + scripts.
 # Refuses to build if the APK requests a privileged permission missing from the whitelist
 # (on an enforcing ROM that would stop the phone from booting).
 set -eu
@@ -8,10 +8,10 @@ ROOT="$HERE/../.."
 APK="$ROOT/host/android/app/build/outputs/apk/debug/app-debug.apk"
 DAEMONS="$ROOT/host/daemon/out"
 ABIS="arm64-v8a armeabi-v7a"
-XML="$HERE/template/system/etc/permissions/privapp-permissions-dev.simrelay.host.xml"
+XML="$HERE/template/system/etc/permissions/privapp-permissions-com.keremgok.hermessim.host.xml"
 AAPT="$(ls "$HOME"/Library/Android/sdk/build-tools/*/aapt2 | sort -V | tail -1)"
 [ -f "$APK" ] || { echo "build host/android first"; exit 1; }
-for abi in $ABIS; do [ -f "$DAEMONS/$abi/simrelayd" ] || { echo "build host/daemon first ($abi)"; exit 1; }; done
+for abi in $ABIS; do [ -f "$DAEMONS/$abi/hermessimd" ] || { echo "build host/daemon first ($abi)"; exit 1; }; done
 
 # Privileged permissions requested vs whitelisted (privileged set taken from the device when connected).
 requested=$("$AAPT" dump permissions "$APK" | sed -n "s/^uses-permission: name='\(.*\)'.*/\1/p")
@@ -25,12 +25,12 @@ done
 
 STAGE="$(mktemp -d)"
 cp -R "$HERE/template/." "$STAGE/"
-mkdir -p "$STAGE/system/priv-app/SimRelayHost"
-cp "$APK" "$STAGE/system/priv-app/SimRelayHost/SimRelayHost.apk"
-for abi in $ABIS; do mkdir -p "$STAGE/bin/$abi" && cp "$DAEMONS/$abi/simrelayd" "$STAGE/bin/$abi/simrelayd"; done
+mkdir -p "$STAGE/system/priv-app/HermesSimHost"
+cp "$APK" "$STAGE/system/priv-app/HermesSimHost/HermesSimHost.apk"
+for abi in $ABIS; do mkdir -p "$STAGE/bin/$abi" && cp "$DAEMONS/$abi/hermessimd" "$STAGE/bin/$abi/hermessimd"; done
 VER=$(sed -n 's/^version=//p' "$HERE/template/module.prop")
 mkdir -p "$HERE/out"
-OUT="$HERE/out/simrelay-host-$VER.zip"
+OUT="$HERE/out/hermessim-host-$VER.zip"
 rm -f "$OUT"
 (cd "$STAGE" && zip -qr -X "$OUT" .)
 rm -rf "$STAGE"

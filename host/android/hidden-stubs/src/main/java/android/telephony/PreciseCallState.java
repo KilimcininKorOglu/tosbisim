@@ -1,4 +1,4 @@
-// SIM Relay host. Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
+// HermesSIM host. Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
 package android.telephony;
 
 /**

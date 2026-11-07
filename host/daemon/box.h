@@ -1,4 +1,4 @@
-// simrelayd box mode helpers. Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
+// hermessimd box mode helpers. Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
 #pragma once
 
 #include <stddef.h>

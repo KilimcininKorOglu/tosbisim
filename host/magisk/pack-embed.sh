@@ -6,11 +6,11 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 DAEMONS="$HERE/../daemon/out"
 ABIS="arm64-v8a armeabi-v7a"
 OUT="$HERE/../android/app/src/embed/assets/module"
-for abi in $ABIS; do [ -f "$DAEMONS/$abi/simrelayd" ] || { echo "build host/daemon first ($abi)"; exit 1; }; done
+for abi in $ABIS; do [ -f "$DAEMONS/$abi/hermessimd" ] || { echo "build host/daemon first ($abi)"; exit 1; }; done
 STAGE="$(mktemp -d)"
 cp -R "$HERE/template/." "$STAGE/"
 # One daemon per ABI under bin/<abi>/: customize.sh keeps the phone's own, Updater swaps in the same one
-for abi in $ABIS; do mkdir -p "$STAGE/bin/$abi" && cp "$DAEMONS/$abi/simrelayd" "$STAGE/bin/$abi/simrelayd"; done
+for abi in $ABIS; do mkdir -p "$STAGE/bin/$abi" && cp "$DAEMONS/$abi/hermessimd" "$STAGE/bin/$abi/hermessimd"; done
 mkdir -p "$OUT"
 rm -f "$OUT/tosbisim-host-module.zip"
 (cd "$STAGE" && zip -qr -X "$OUT/tosbisim-host-module.zip" .)

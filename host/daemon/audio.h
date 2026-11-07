@@ -1,7 +1,7 @@
-// simrelayd audio pump (M5). Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
+// hermessimd audio pump (M5). Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
 #include <stddef.h>
-#ifndef SIMRELAYD_AUDIO_H
-#define SIMRELAYD_AUDIO_H
+#ifndef HERMESSIMD_AUDIO_H
+#define HERMESSIMD_AUDIO_H
 
 // Configuration passed from the loaded device profile (host app -> SET lines -> here).
 typedef struct {
@@ -15,7 +15,7 @@ typedef struct {
     int loopback;           // self-test: captured caller audio is also played back into the call
 } audio_cfg_t;
 
-// Start the always-on audio I/O thread and open the audio client socket "@simrelayd-audio".
+// Start the always-on audio I/O thread and open the audio client socket "@hermessimd-audio".
 // allowed_uid mirrors the control socket's SO_PEERCRED check. Call once from main().
 void audio_init(int allowed_uid);
 

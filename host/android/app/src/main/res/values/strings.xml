@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- SIM Relay host (shown to people as "HermesSIM Host"). GPL-3.0-or-later. Turkish: values-tr/strings.xml -->
+<!-- HermesSIM host (shown to people as "HermesSIM Host"). GPL-3.0-or-later. Turkish: values-tr/strings.xml -->
 <resources>
     <string name="app_name">HermesSIM Host</string>
     <string name="notif_channel">HermesSIM Host</string>

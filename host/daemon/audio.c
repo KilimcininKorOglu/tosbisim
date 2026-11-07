@@ -1,4 +1,4 @@
-// simrelayd audio pump (M5). Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
+// hermessimd audio pump (M5). Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
 //
 // While a call is up, two directions run on the sound card's own clock (no sleeps):
 //   caller -> client : capture PCM (VOC_REC_DL, 16 kHz mono, 10 ms) -> Opus encode -> audio client
@@ -34,7 +34,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#define TAG "simrelayd"
+#define TAG "hermessimd"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
@@ -127,7 +127,7 @@ static int ta_load(void) {
     void *h = NULL;
     for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]) && !h; i++) h = dlopen(paths[i], RTLD_NOW);
     if (!h) {
-        __android_log_print(ANDROID_LOG_ERROR, "simrelayd", "dlopen libtinyalsa: %s", dlerror());
+        __android_log_print(ANDROID_LOG_ERROR, "hermessimd", "dlopen libtinyalsa: %s", dlerror());
         pthread_mutex_unlock(&ta_lock);
         return -1;
     }
@@ -136,7 +136,7 @@ static int ta_load(void) {
     ta.prepare = dlsym(h, "pcm_prepare");
     ta.stop = dlsym(h, "pcm_stop");
     if (!ta.open || !ta.is_ready || !ta.get_error || !ta.read || !ta.write || !ta.close || !ta.prepare) {
-        __android_log_print(ANDROID_LOG_ERROR, "simrelayd", "libtinyalsa: missing symbols");
+        __android_log_print(ANDROID_LOG_ERROR, "hermessimd", "libtinyalsa: missing symbols");
         ta.open = NULL;
         pthread_mutex_unlock(&ta_lock);
         return -1;
@@ -145,7 +145,7 @@ static int ta_load(void) {
     return 0;
 }
 
-#define SOCK_NAME "simrelayd-audio"
+#define SOCK_NAME "hermessimd-audio"
 #define CAP_RATE 16000
 #define CAP_FRAME 160          // 10 ms at 16 kHz (one Opus frame)
 #define CAP_PERIOD CAP_FRAME   // 10 ms periods, one per read (one Opus frame)

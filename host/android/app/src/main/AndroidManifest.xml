@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- SIM Relay host app. Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
+<!-- HermesSIM host app. Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
      Installed as a privileged system app by the Magisk module (host/magisk). Every privileged
-     permission requested here MUST be listed in host/magisk/privapp-permissions-dev.simrelay.host.xml:
+     permission requested here MUST be listed in host/magisk/privapp-permissions-com.keremgok.hermessim.host.xml:
      this ROM enforces it (ro.control_privapp_permissions=enforce) and refuses to boot otherwise. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -27,8 +27,8 @@
     <!-- The box-mode escape gesture opens the setup checklist from the background -->
     <uses-permission android:name="android.permission.START_ACTIVITIES_FROM_BACKGROUND" />
 
-    <!-- Only simrelayd (root) sends these broadcasts; no other app can hold a signature permission of ours. -->
-    <permission android:name="dev.simrelay.host.permission.DAEMON" android:protectionLevel="signature" />
+    <!-- Only hermessimd (root) sends these broadcasts; no other app can hold a signature permission of ours. -->
+    <permission android:name="com.keremgok.hermessim.host.permission.DAEMON" android:protectionLevel="signature" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- Android 14+: the host service is a connected-device service (BLE relay); kept long-lived. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
@@ -142,10 +142,10 @@
         <receiver
             android:name=".DaemonEventReceiver"
             android:exported="true"
-            android:permission="dev.simrelay.host.permission.DAEMON">
+            android:permission="com.keremgok.hermessim.host.permission.DAEMON">
             <intent-filter>
-                <action android:name="dev.simrelay.host.BOX_ESCAPE" />
-                <action android:name="dev.simrelay.host.DAEMON_UP" />
+                <action android:name="com.keremgok.hermessim.host.BOX_ESCAPE" />
+                <action android:name="com.keremgok.hermessim.host.DAEMON_UP" />
             </intent-filter>
         </receiver>
 
@@ -199,14 +199,14 @@
             android:name=".SmsSender$SentReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="dev.simrelay.host.SMS_SENT" />
+                <action android:name="com.keremgok.hermessim.host.SMS_SENT" />
             </intent-filter>
         </receiver>
         <receiver
             android:name=".SmsSender$DeliveredReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="dev.simrelay.host.SMS_DELIVERED" />
+                <action android:name="com.keremgok.hermessim.host.SMS_DELIVERED" />
             </intent-filter>
         </receiver>
 

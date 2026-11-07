@@ -15,7 +15,7 @@ val signingProps = Properties().apply {
 }
 
 android {
-    namespace = "dev.simrelay.host"
+    namespace = "com.keremgok.hermessim.host"
     compileSdk = 36
     signingConfigs {
         create("release") {
@@ -90,7 +90,7 @@ tasks.matching { it.name.startsWith("process") && it.name.endsWith("MainManifest
     doLast {
         val manifest = outputs.files.asFileTree.matching { include("**/AndroidManifest.xml") }.files.firstOrNull() ?: return@doLast
         val requested = Regex("""uses-permission[^>]*android:name="([^"]+)"""").findAll(manifest.readText()).map { it.groupValues[1] }.toSet()
-        val allowlist = rootProject.file("../magisk/template/system/etc/permissions/privapp-permissions-dev.simrelay.host.xml")
+        val allowlist = rootProject.file("../magisk/template/system/etc/permissions/privapp-permissions-com.keremgok.hermessim.host.xml")
         val privileged = Regex("""permission name="([^"]+)"""").findAll(allowlist.readText()).map { it.groupValues[1] }.toSet()
         val unknown = requested - privileged - ordinaryPermissions
         if (unknown.isNotEmpty()) throw GradleException(

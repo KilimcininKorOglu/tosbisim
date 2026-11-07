@@ -4,5 +4,5 @@ pluginManagement {
 dependencyResolutionManagement {
     repositories { google(); mavenCentral() }
 }
-rootProject.name = "simrelay-host"
+rootProject.name = "hermessim-host"
 include(":app", ":hidden-stubs")

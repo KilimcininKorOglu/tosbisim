@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
         }
         close(fd);
     }
-    // real opens through the system tinyalsa (as simrelayd does)
+    // real opens through the system tinyalsa (as hermessimd does)
     const char *libs[] = {"libtinyalsa.so", "/system/lib64/libtinyalsa.so", "/vendor/lib64/libtinyalsa.so"};
     void *h = NULL; for (int i = 0; i < 3 && !h; i++) h = dlopen(libs[i], RTLD_NOW);
     if (!h) { printf("no tinyalsa: %s\n", dlerror()); return 0; }

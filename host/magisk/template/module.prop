@@ -1,4 +1,4 @@
-id=simrelay-host
+id=hermessim-host
 name=HermesSIM Host
 version=0.8.0-rollout
 versionCode=21

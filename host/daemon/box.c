@@ -1,4 +1,4 @@
-// simrelayd box mode helpers. Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
+// hermessimd box mode helpers. Copyright (C) 2026 SIM Relay authors. GPL-3.0-or-later.
 //
 // Root-only pieces of "box mode" (the host as a silent, screen-off box). Everything phone-specific is
 // probed, not hard-coded:
@@ -29,15 +29,15 @@
 
 #include "box.h"
 
-#define TAG "simrelayd"
+#define TAG "hermessimd"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
 
 extern char **environ;
 
 #define ESCAPE_WINDOW_NS 5000000000LL
-#define ESCAPE_ACTION "dev.simrelay.host.BOX_ESCAPE"
-#define ESCAPE_RECEIVER "com.keremgok.hermessim.host/dev.simrelay.host.DaemonEventReceiver"
+#define ESCAPE_ACTION "com.keremgok.hermessim.host.BOX_ESCAPE"
+#define ESCAPE_RECEIVER "com.keremgok.hermessim.host/.DaemonEventReceiver"
 
 static int g_keys[BOX_MAX_KEYDEVS];
 static int g_power[BOX_MAX_KEYDEVS], g_grabbed[BOX_MAX_KEYDEVS], g_volup[BOX_MAX_KEYDEVS], g_voldown[BOX_MAX_KEYDEVS];
@@ -731,7 +731,7 @@ static void log_spawn(const char *since) {
     const char *head[] = { "/system/bin/logcat", "-b", "main,system,crash", "-v", "time", "-f", LOG_FILE, "-r", "2048", "-n", "5" };
     for (size_t i = 0; i < sizeof(head) / sizeof(head[0]); i++) argv[a++] = (char *)head[i];
     if (since) { argv[a++] = "-T"; argv[a++] = (char *)since; }
-    const char *tags[] = { "-s", "SimRelayHost:I", "simrelayd:I", "voice:D", "Telecom:I", "SemWifiApTimeOutImpl:I", "Tethering:W",
+    const char *tags[] = { "-s", "HermesSimHost:I", "hermessimd:I", "voice:D", "Telecom:I", "SemWifiApTimeOutImpl:I", "Tethering:W",
         "AndroidRuntime:E" };
     for (size_t i = 0; i < sizeof(tags) / sizeof(tags[0]); i++) argv[a++] = (char *)tags[i];
     argv[a] = NULL;
@@ -789,7 +789,7 @@ void box_log_watch(void) {
     log_spawn(since[0] ? since : NULL);
 }
 
-void box_announce(void) { broadcast("dev.simrelay.host.DAEMON_UP"); }
+void box_announce(void) { broadcast("com.keremgok.hermessim.host.DAEMON_UP"); }
 
 static void escape(void) {
     box_power_block(0);                  // the person at the phone gets their buttons back at once
