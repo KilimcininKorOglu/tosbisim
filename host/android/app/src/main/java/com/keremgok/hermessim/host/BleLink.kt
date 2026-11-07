@@ -109,7 +109,7 @@ class BleLink(
 
     /**
      * Android 12+: without its Bluetooth permissions every GATT call throws. The module grants them at boot, but
-     * TosbiSim's data cleared in Settings resets them: the service crashed at start, Android gave up after two
+     * HermesSIM's data cleared in Settings resets them: the service crashed at start, Android gave up after two
      * crashes, and the module's watchdog saw the process alive (its other parts), so the host stayed dead until
      * someone opened its screen (J7 Prime, 5 Nov 2026). Now the GATT service waits for them; self-repair grants them.
      */
@@ -455,7 +455,7 @@ class BleLink(
         AdvertiseData.Builder().addServiceUuid(ParcelUuid(if (pairable()) PAIR_SERVICE else SERVICE)).build()
 
     /** The phone's name in the scan response when it fits (31 bytes - 2; Android 11/12 count the whole name, and
-     *  refuse the set otherwise): nameless, the host still works, the iPhone's sheet shows TosbiSim Host. */
+     *  refuse the set otherwise): nameless, the host still works, the iPhone's sheet shows HermesSIM Host. */
     private fun scanResponse(): AdvertiseData =
         AdvertiseData.Builder().setIncludeDeviceName(withName && nameBytes() <= 29).build()
 

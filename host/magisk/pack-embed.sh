@@ -12,7 +12,7 @@ cp -R "$HERE/template/." "$STAGE/"
 # One daemon per ABI under bin/<abi>/: customize.sh keeps the phone's own, Updater swaps in the same one
 for abi in $ABIS; do mkdir -p "$STAGE/bin/$abi" && cp "$DAEMONS/$abi/hermessimd" "$STAGE/bin/$abi/hermessimd"; done
 mkdir -p "$OUT"
-rm -f "$OUT/tosbisim-host-module.zip"
-(cd "$STAGE" && zip -qr -X "$OUT/tosbisim-host-module.zip" .)
+rm -f "$OUT/hermessim-host-module.zip"
+(cd "$STAGE" && zip -qr -X "$OUT/hermessim-host-module.zip" .)
 rm -rf "$STAGE"
-echo "embedded module: $OUT/tosbisim-host-module.zip ($(wc -c < "$OUT/tosbisim-host-module.zip") bytes)"
+echo "embedded module: $OUT/hermessim-host-module.zip ($(wc -c < "$OUT/hermessim-host-module.zip") bytes)"

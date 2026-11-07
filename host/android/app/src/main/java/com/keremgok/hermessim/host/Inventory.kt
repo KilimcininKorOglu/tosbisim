@@ -21,7 +21,7 @@ import java.util.zip.GZIPOutputStream
 object Inventory {
     private const val TAG = "HermesSimHost"
     private const val FORMAT = 1                     // bump when the content changes: every phone sends it again
-    private const val FILE = "/data/adb/tosbisim/inventory.txt"
+    private const val FILE = "/data/adb/hermessim/inventory.txt"
     private const val PART_BYTES = 40_000            // gzip+base64 per report; the rest of the report is ~3 KB
     // The server takes at most 64 KB of JSON, and PHP writes every "/" as "\/": each report stays under this as sent
     private const val REPORT_BYTES = 56_000

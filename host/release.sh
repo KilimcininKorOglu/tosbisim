@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build a release of TosbiSim Host: daemon -> embedded Magisk module -> signed APK -> the Magisk zip, in host/out/.
+# Build a release of HermesSIM Host: daemon -> embedded Magisk module -> signed APK -> the Magisk zip, in host/out/.
 # Users install ONLY the Magisk zip (20 Oct 2026: Play Protect blocks the sideloaded APK); the APK itself is what
 # hosts download for over-the-air self-updates (--publish). Needs the release key in ~/.tosbisim.
 set -eu
@@ -7,7 +7,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 # --publish: hosts get it over the air from hermessim.keremgok.tr. --github: the source to the public repo (publish-public.sh),
 # then a GitHub release there with the Magisk zip, the file users download (tosbisim.com links to
-# releases/latest/download/TosbiSim-Host-Magisk.zip).
+# releases/latest/download/HermesSIM-Host-Magisk.zip).
 PUBLISH=0; GITHUB=0
 for a in "$@"; do case "$a" in --publish) PUBLISH=1;; --github) GITHUB=1;; *) echo "unknown option $a"; exit 2;; esac; done
 STAGE=""; GHSTAGE=""
@@ -56,7 +56,7 @@ PY
 "$HERE/daemon/build.sh"
 "$HERE/magisk/pack-embed.sh"
 (cd "$HERE/android" && ./gradlew -q assembleRelease)
-OUT="$HERE/out/TosbiSim-Host-$VER.apk"
+OUT="$HERE/out/HermesSIM-Host-$VER.apk"
 cp "$HERE/android/app/build/outputs/apk/release/app-release.apk" "$OUT"
 APKSIGNER="$(ls "$HOME"/Library/Android/sdk/build-tools/*/apksigner | sort -V | tail -1)"
 "$APKSIGNER" verify --print-certs "$OUT" | grep -m1 "SHA-256"
@@ -64,17 +64,17 @@ APKSIGNER="$(ls "$HOME"/Library/Android/sdk/build-tools/*/apksigner | sort -V | 
 # (or, as a fresh Magisk install, start a second line of hosts that never update again). Stop here instead.
 CERT=08dafcad5f23c49dd44997fc036182fa7659273a500499b2c4c33879d4344d54
 "$APKSIGNER" verify --print-certs "$OUT" | grep -q "certificate SHA-256 digest: $CERT" \
-  || { echo "$OUT is not signed with the TosbiSim release key: not released"; exit 1; }
+  || { echo "$OUT is not signed with the HermesSIM release key: not released"; exit 1; }
 (cd "$HERE/out" && shasum -a 256 "$(basename "$OUT")" > "$(basename "$OUT").sha256")
 echo "release: $OUT ($COMMIT)"
 
 # The same host as a Magisk module that carries the app: installed from the Magisk app (Modules -> Install from
-# storage) it puts TosbiSim on as a system app, which Play Protect's sideloading block never sees. That block stops the
+# storage) it puts HermesSIM on as a system app, which Play Protect's sideloading block never sees. That block stops the
 # plain APK cold on some phones ("App blocked to protect your device", no way past it: SMS permissions; Redmi Note 8
 # Pro, 20 Oct 2026). customize.sh uses the APK it finds in the module.
-ZIP="$HERE/out/TosbiSim-Host-$VER-Magisk.zip"
+ZIP="$HERE/out/HermesSIM-Host-$VER-Magisk.zip"
 STAGE="$(mktemp -d)"
-unzip -q "$HERE/android/app/src/embed/assets/module/tosbisim-host-module.zip" -d "$STAGE"
+unzip -q "$HERE/android/app/src/embed/assets/module/hermessim-host-module.zip" -d "$STAGE"
 mkdir -p "$STAGE/system/priv-app/HermesSimHost"
 cp "$OUT" "$STAGE/system/priv-app/HermesSimHost/HermesSimHost.apk"
 sed -i '' "s/^version=.*/version=$VER/; s/^versionCode=.*/versionCode=$CODE/" "$STAGE/module.prop"
@@ -95,21 +95,21 @@ if [ "$GITHUB" = 1 ]; then
     || { echo "the public repo's last commit isn't the source of $VER: not released"; exit 1; }
   gh api "repos/$REPO/commits/$PUBSHA" --jq .sha >/dev/null || { echo "public commit $PUBSHA isn't on GitHub: not released"; exit 1; }
   GHSTAGE="$(mktemp -d)"
-  cp "$ZIP" "$GHSTAGE/TosbiSim-Host-Magisk.zip"
-  (cd "$GHSTAGE" && shasum -a 256 TosbiSim-Host-Magisk.zip > TosbiSim-Host-Magisk.zip.sha256)
+  cp "$ZIP" "$GHSTAGE/HermesSIM-Host-Magisk.zip"
+  (cd "$GHSTAGE" && shasum -a 256 HermesSIM-Host-Magisk.zip > HermesSIM-Host-Magisk.zip.sha256)
   python3 - "$NOTES" "$GHSTAGE/notes.md" "https://github.com/$REPO/tree/$PUBSHA" <<'PYN'
 import json, sys
 n = json.load(open(sys.argv[1], encoding="utf-8"))
 open(sys.argv[2], "w", encoding="utf-8").write(
-    n["en"] + "\n\n**Install:** in Magisk, Modules → Install from storage → TosbiSim-Host-Magisk.zip → Reboot. "
+    n["en"] + "\n\n**Install:** in Magisk, Modules → Install from storage → HermesSIM-Host-Magisk.zip → Reboot. "
     "Guide: https://tosbisim.com\n\n---\n\n" + n["tr"] +
-    "\n\n**Kurulum:** Magisk → Modüller → Depolamadan yükle → TosbiSim-Host-Magisk.zip → Yeniden başlat. Rehber: https://tosbisim.com\n"
+    "\n\n**Kurulum:** Magisk → Modüller → Depolamadan yükle → HermesSIM-Host-Magisk.zip → Yeniden başlat. Rehber: https://tosbisim.com\n"
     "\n---\n\nSource: " + sys.argv[3] + "\n")
 PYN
-  gh release create "$TAG" --repo "$REPO" --target "$PUBSHA" --title "TosbiSim Host $VER" --notes-file "$GHSTAGE/notes.md" --draft \
-    "$GHSTAGE/TosbiSim-Host-Magisk.zip" "$GHSTAGE/TosbiSim-Host-Magisk.zip.sha256"
+  gh release create "$TAG" --repo "$REPO" --target "$PUBSHA" --title "HermesSIM Host $VER" --notes-file "$GHSTAGE/notes.md" --draft \
+    "$GHSTAGE/HermesSIM-Host-Magisk.zip" "$GHSTAGE/HermesSIM-Host-Magisk.zip.sha256"
   assets=$(gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[].name')
-  for f in TosbiSim-Host-Magisk.zip TosbiSim-Host-Magisk.zip.sha256; do
+  for f in HermesSIM-Host-Magisk.zip HermesSIM-Host-Magisk.zip.sha256; do
     echo "$assets" | grep -qx "$f" || { echo "draft $TAG lacks $f: not published (fix or delete the draft)"; exit 1; }
   done
 fi

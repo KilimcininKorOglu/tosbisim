@@ -142,7 +142,7 @@ static const char *START_NODES[] = {
     "/sys/class/power_supply/lenovo_battery/charge_control_start_threshold",
 };
 #define BATT_CAPACITY "/sys/class/power_supply/battery/capacity"
-#define LIMIT_DIR "/data/adb/tosbisim"
+#define LIMIT_DIR "/data/adb/hermessim"
 #define LIMIT_FILE LIMIT_DIR "/charge_limit"
 #define ORIGINAL_FILE LIMIT_DIR "/charge_original"
 #define MIN_ON_BATTERY 15
@@ -703,8 +703,8 @@ static void broadcast(const char *action) {
 
 // Persistent log: logcat's ring buffer (5 MiB) rolls over within hours on a busy day, losing the host's side of
 // a trip (16 Oct 2026). logcat itself writes a rotated copy (2 MiB x 5) of our tags + call/voice/hotspot tags.
-#define LOG_FILE "/data/adb/tosbisim/logs/host.log"
-#define LOG_PIDF "/data/adb/tosbisim/logs/logcat.pid"
+#define LOG_FILE "/data/adb/hermessim/logs/host.log"
+#define LOG_PIDF "/data/adb/hermessim/logs/logcat.pid"
 
 // The capture's logcat (pid file; a pattern match would find itself), or 0 if it no longer runs.
 static int log_pid(void) {
@@ -744,8 +744,8 @@ static void log_spawn(const char *since) {
 }
 
 void box_log_capture(void) {
-    mkdir("/data/adb/tosbisim", 0700);
-    mkdir("/data/adb/tosbisim/logs", 0700);
+    mkdir("/data/adb/hermessim", 0700);
+    mkdir("/data/adb/hermessim/logs", 0700);
     log_stop();
     log_spawn(NULL);
 }

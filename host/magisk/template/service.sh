@@ -18,24 +18,24 @@ until [ "$(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
   fi
   GB=$(settings get global tosbisim_given_back 2>/dev/null)
   if [ -n "$GB" ] && [ "$GB" != null ]; then
-    echo "$(date) given back ($GB): TosbiSim stays off; remove it in the root manager's modules"
+    echo "$(date) given back ($GB): HermesSIM stays off; remove it in the root manager's modules"
     exit 0
   fi
 
   # Our logs must show: MediaTek ROMs set log.tag=M, which hides app logs (Redmi Note 8 Pro, 18 Oct).
   setprop log.tag.HermesSimHost I; setprop log.tag.hermessimd I
 
-  # What the phone had before TosbiSim changed anything, once: the host app's "Stop using this phone as a host" puts it
-  # back. A phone that already ran this script has only TosbiSim's values left, so it records none (Android's defaults
+  # What the phone had before HermesSIM changed anything, once: the host app's "Stop using this phone as a host" puts it
+  # back. A phone that already ran this script has only HermesSIM's values left, so it records none (Android's defaults
   # are used then).
-  ORIG=/data/adb/tosbisim/original-settings.txt
+  ORIG=/data/adb/hermessim/original-settings.txt
   if [ ! -e "$ORIG" ]; then
-    # TosbiSim ran here before: its folder (the daemon makes it) or earlier runs of this script in the log
-    if [ -e /data/adb/tosbisim ] || [ -e "$LOG.1" ] || [ "$(grep -c 'service.sh start' "$LOG" 2>/dev/null)" -gt 1 ]; then
-      mkdir -p /data/adb/tosbisim
+    # HermesSIM ran here before: its folder (the daemon makes it) or earlier runs of this script in the log
+    if [ -e /data/adb/hermessim ] || [ -e "$LOG.1" ] || [ "$(grep -c 'service.sh start' "$LOG" 2>/dev/null)" -gt 1 ]; then
+      mkdir -p /data/adb/hermessim
       echo "# set up before snapshots: defaults" > "$ORIG"
     else
-      mkdir -p /data/adb/tosbisim
+      mkdir -p /data/adb/hermessim
       for k in system/vibrate_when_ringing system/haptic_feedback_enabled system/sound_effects_enabled \
                system/lockscreen_sounds_enabled system/dtmf_tone system/call_end_tone system/call_conn_tone \
                system/volume_waiting_tone global/zen_mode secure/sms_default_application secure/dialer_default_application \
@@ -94,7 +94,7 @@ until [ "$(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
   # headless phone records as a denial (seen 18 Oct): grant it here, as the module that installed the app, in the root
   # manager's own list. APatch never prompts: an app is root only in its list (pkg,exclude,allow,uid,to_uid,sctx, read
   # at boot), and without it every root call failed until the owner found the switch (Mi 11 Pro, 4 Nov 2026).
-  # KernelSU keeps its list in a binary file: there the owner allows TosbiSim in KernelSU → Superuser.
+  # KernelSU keeps its list in a binary file: there the owner allows HermesSIM in KernelSU → Superuser.
   grant_root() {
     [ -n "$1" ] || return
     if [ -x /data/adb/apd ] && [ -d /data/adb/ap ]; then
@@ -148,8 +148,8 @@ until [ "$(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
         bad=$(sha256sum "$MODDIR/hermessimd" 2>/dev/null | cut -d' ' -f1)
         cp "$MODDIR/hermessimd.prev" "$MODDIR/hermessimd.tmp" && chmod 755 "$MODDIR/hermessimd.tmp" && mv -f "$MODDIR/hermessimd.tmp" "$MODDIR/hermessimd" \
           && echo "$(date) hermessimd keeps failing: back to the previous build (rejected $bad)" \
-          && [ -n "$bad" ] && mkdir -p /data/adb/tosbisim \
-          && echo "$bad" > /data/adb/tosbisim/daemon-rolled-back.tmp && mv -f /data/adb/tosbisim/daemon-rolled-back.tmp /data/adb/tosbisim/daemon-rolled-back
+          && [ -n "$bad" ] && mkdir -p /data/adb/hermessim \
+          && echo "$bad" > /data/adb/hermessim/daemon-rolled-back.tmp && mv -f /data/adb/hermessim/daemon-rolled-back.tmp /data/adb/hermessim/daemon-rolled-back
       fi
       [ $fails -gt 1 ] && delay=$(( delay * 2 > 60 ? 60 : delay * 2 ))
       echo "$(date) hermessimd exited $rc (quick failures: $fails), restarting in $delay s"

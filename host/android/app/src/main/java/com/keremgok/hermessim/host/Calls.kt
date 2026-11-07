@@ -92,7 +92,7 @@ object CallRegistry {
         } else {
             Daemon.callIdle()
             // A call without relayed audio (Basic mode, or one the iPhone didn't dial or answer): the host stays quiet.
-            // TosbiSim governs every call from install until "Stop using this phone as a host", box mode or not, as
+            // HermesSIM governs every call from install until "Stop using this phone as a host", box mode or not, as
             // the phone app ([BasicSilence.wanted]: another phone app's call is its owner's).
             BasicSilence.set(app, audible != null && BasicSilence.wanted(isOwned(audible), Onboarding.dialerRole(app)))
         }
@@ -281,7 +281,7 @@ object BasicSilence {
 
     /**
      * Which calls without relayed audio are silenced: the client's always (it was answered or dialled from there, with
-     * the host in a bag or a drawer), any other only while TosbiSim is the phone app. With another phone app holding
+     * the host in a bag or a drawer), any other only while HermesSIM is the phone app. With another phone app holding
      * the role, a call the client didn't dial or answer was taken on this phone by a person holding it (the role given
      * back, or changed by hand): muting its mic cut its owner off (Mi 11 Pro, 4 Nov 2026).
      */

@@ -217,7 +217,7 @@ object Updater {
         val abi = Onboarding.daemonAbi ?: return                     // no build for this phone: the module never installed
         runCatching {
             val zip = File(app.cacheDir, "module.zip")
-            app.assets.open("module/tosbisim-host-module.zip").use { i -> zip.outputStream().use { o -> i.copyTo(o) } }
+            app.assets.open("module/hermessim-host-module.zip").use { i -> zip.outputStream().use { o -> i.copyTo(o) } }
             val fresh = File(app.cacheDir, "hermessimd")
             // The build customize.sh kept at install (bin/<abi>/hermessimd): a 32-bit phone must never get the 64-bit one
             ZipFile(zip).use { z -> z.getInputStream(z.getEntry("bin/$abi/hermessimd")).use { i -> fresh.outputStream().use { o -> i.copyTo(o) } } }
@@ -228,7 +228,7 @@ object Updater {
             val freshSha = sha256(fresh)
             // service.sh went back to hermessimd.prev because this build kept failing to start, and wrote its sha256
             // here: installing it again would only repeat that, at every app start (audit, 20 Oct 2026)
-            val rolledBack = Root.sh("cat /data/adb/tosbisim/daemon-rolled-back 2>/dev/null").out
+            val rolledBack = Root.sh("cat /data/adb/hermessim/daemon-rolled-back 2>/dev/null").out
                 .trim().substringBefore(' ').substringBefore('\n').lowercase()
             if (installedSha == null) {
                 Log.w(TAG, "hermessimd: the installed build can't be read (no root?): left as it is")

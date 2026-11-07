@@ -100,7 +100,7 @@ object Diag {
      * this app's own logcat. Read [LOG_READ] so the excerpt still reaches back far enough once the noise is out.
      */
     fun recentLog(bytes: Int): String {
-        val raw = Root.sh("tail -c $LOG_READ /data/adb/tosbisim/logs/host.log", 10_000).takeIf { it.ok && it.out.length > 200 }?.out
+        val raw = Root.sh("tail -c $LOG_READ /data/adb/hermessim/logs/host.log", 10_000).takeIf { it.ok && it.out.length > 200 }?.out
             ?.let { if (Regex("""^\d\d-\d\d \d\d:""").containsMatchIn(it.take(9))) it else it.substring(it.indexOf('\n') + 1) }   // tail -c starts mid-line
             ?.let { it.substring(0, it.lastIndexOf('\n') + 1) }   // the file ends mid-line (4 KiB blocks): logcat has it whole
             ?.let { it + newerThan(it) }

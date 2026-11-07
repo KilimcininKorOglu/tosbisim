@@ -23,12 +23,12 @@
     <string name="unlock_pixel">Pixel: fastboot\'ta \"fastboot flashing unlock\" komutunu çalıştırın. Operatör (Verizon) Pixel\'lerinin kilidi açılamaz.</string>
     <string name="unlock_code">Üreticiniz web sitesinde bir kilit açma kodu verir (Motorola, Sony); sonra gösterdiği fastboot komutunu çalıştırın.</string>
     <string name="unlock_other">Ardından fastboot\'ta \"fastboot flashing unlock\" komutunu çalıştırın.</string>
-    <string name="unlock_erase">Kilit açma telefondaki her şeyi siler. Ardından telefonu Magisk ile root\'layın ve TosbiSim-Host-Magisk.zip dosyasını Magisk → Modüller\'den kurun.</string>
+    <string name="unlock_erase">Kilit açma telefondaki her şeyi siler. Ardından telefonu Magisk ile root\'layın ve HermesSIM-Host-Magisk.zip dosyasını Magisk → Modüller\'den kurun.</string>
     <string name="unlock_cant">Bu telefon önyükleyici kilidinin açılamayacağını bildiriyor.</string>
     <string name="btn_dev_options">Geliştirici seçeneklerini aç</string>
 
     <string name="root_title">Telefonu Magisk ile root\'layın</string>
-    <string name="root_body">Magisk uygulamasını kurun, bu telefonun boot imajını onunla yamalayın ve yamalı imajı yükleyin (Samsung: Odin ile). Magisk\'in rehberi her telefon türünü anlatır. Sonra TosbiSim-Host-Magisk.zip dosyasını Magisk → Modüller\'den kurup telefonu yeniden başlatın.</string>
+    <string name="root_body">Magisk uygulamasını kurun, bu telefonun boot imajını onunla yamalayın ve yamalı imajı yükleyin (Samsung: Odin ile). Magisk\'in rehberi her telefon türünü anlatır. Sonra HermesSIM-Host-Magisk.zip dosyasını Magisk → Modüller\'den kurup telefonu yeniden başlatın.</string>
     <string name="root_checking">Root kontrol ediliyor… Magisk sorarsa İzin ver\'e dokunun.</string>
     <string name="root_no_su">Henüz root bulunamadı: önce Magisk\'i kurun (rehberine bakın).</string>
     <string name="root_timeout">%1$s yanıt vermedi. Root\'u kontrol et\'e yeniden dokunun ve %1$s sorduğunda İzin ver\'e dokunun.</string>
@@ -37,7 +37,7 @@
     <string name="btn_magisk_guide">Magisk rehberini aç</string>
 
     <string name="install_title">HermesSIM Ana Cihaz modülünü kurun</string>
-    <string name="install_body">Root çalışıyor. Magisk uygulamasında Modüller → Depolamadan yükle\'yi açın, TosbiSim-Host-Magisk.zip dosyasını (tosbisim.com\'dan) seçin ve telefonu yeniden başlatın. HermesSIM kendiliğinden açılır ve bu ekran kaldığı yerden devam eder.</string>
+    <string name="install_body">Root çalışıyor. Magisk uygulamasında Modüller → Depolamadan yükle\'yi açın, HermesSIM-Host-Magisk.zip dosyasını (tosbisim.com\'dan) seçin ve telefonu yeniden başlatın. HermesSIM kendiliğinden açılır ve bu ekran kaldığı yerden devam eder.</string>
     <string name="btn_install">Kur</string>
     <string name="btn_installing">Kuruluyor…</string>
     <string name="install_failed_title">Kurulum tamamlanmadı</string>
@@ -48,8 +48,8 @@
     <string name="btn_restart">Şimdi yeniden başlat</string>
     <string name="inactive_title">Modül etkin değil</string>
     <string name="inactive_disabled">%1$s → %2$s bölümünde kapalı. Orada açın, sonra telefonu yeniden başlatın.</string>
-    <string name="inactive_removing">%1$s onu bir sonraki yeniden başlatmada kaldırmaya ayarlı. HermesSIM\'i tutmak için TosbiSim-Host-Magisk.zip dosyasını %1$s → %2$s bölümünden yeniden kurun, sonra yeniden başlatın.</string>
-    <string name="inactive_none">Artık kurulu değil. TosbiSim-Host-Magisk.zip dosyasını %1$s → %2$s bölümünden kurun, sonra yeniden başlatın.</string>
+    <string name="inactive_removing">%1$s onu bir sonraki yeniden başlatmada kaldırmaya ayarlı. HermesSIM\'i tutmak için HermesSIM-Host-Magisk.zip dosyasını %1$s → %2$s bölümünden yeniden kurun, sonra yeniden başlatın.</string>
+    <string name="inactive_none">Artık kurulu değil. HermesSIM-Host-Magisk.zip dosyasını %1$s → %2$s bölümünden kurun, sonra yeniden başlatın.</string>
     <string name="inactive_pending">Kurulu ve yeniden başlatmayı bekliyor.</string>
     <string name="inactive_other">Telefon yeniden başladı ama HermesSIM sistem uygulaması olarak açılmadı. Modülü yeniden kurun; işe yaramazsa aşağıdan bir rapor gönderin.</string>
     <string name="btn_reinstall">Modülü yeniden kur</string>
@@ -166,7 +166,7 @@
     <string name="retire_note">Telefonu normal kullanıma geri verir: sesleri, titreşimi, ekranı ve tuşları, kendi telefon ve mesaj uygulamaları ve Wi-Fi geri gelir, telefonunuz onu unutur ve HermesSIM kaldırılır. Sonunda telefon yeniden başlar. %1$s ve kilidi açılmış önyükleyici kalır.</string>
     <string name="retire_btn">Ana cihaz olarak kullanmayı bırak…</string>
     <string name="retire_confirm_title">HermesSIM bu telefondan kaldırılsın mı?</string>
-    <string name="retire_confirm_body">Telefonunuza bu SIM\'in aramaları ve mesajları artık gelmez. Telefonu daha sonra yeniden ana cihaz yapmak için TosbiSim-Host-Magisk.zip dosyasını %1$s → %2$s bölümünden kurup yeniden eşleştirin.\n\n%1$s (root) ve kilidi açık önyükleyici kalır: bunlar HermesSIM\'den önce kurulmuştu. Telefonu tamamen fabrika yazılımına döndürmek için ardından %1$s uygulamasını kendi içinden kaldırın.</string>
+    <string name="retire_confirm_body">Telefonunuza bu SIM\'in aramaları ve mesajları artık gelmez. Telefonu daha sonra yeniden ana cihaz yapmak için HermesSIM-Host-Magisk.zip dosyasını %1$s → %2$s bölümünden kurup yeniden eşleştirin.\n\n%1$s (root) ve kilidi açık önyükleyici kalır: bunlar HermesSIM\'den önce kurulmuştu. Telefonu tamamen fabrika yazılımına döndürmek için ardından %1$s uygulamasını kendi içinden kaldırın.</string>
     <string name="retire_confirm_yes">Kaldır ve yeniden başlat</string>
     <string name="retire_step_client">Telefonunuza bildiriliyor…</string>
     <string name="retire_step_settings">Telefonun ayarları geri veriliyor…</string>

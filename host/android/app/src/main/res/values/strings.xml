@@ -25,13 +25,13 @@
     <string name="unlock_pixel">Pixel: in fastboot, run \"fastboot flashing unlock\". Carrier (Verizon) Pixels can\'t be unlocked.</string>
     <string name="unlock_code">Your maker gives an unlock code on its website (Motorola, Sony); then run the fastboot command it shows.</string>
     <string name="unlock_other">Then, in fastboot, run \"fastboot flashing unlock\".</string>
-    <string name="unlock_erase">Unlocking erases everything on the phone. Afterwards root it with Magisk and install TosbiSim-Host-Magisk.zip in Magisk → Modules.</string>
+    <string name="unlock_erase">Unlocking erases everything on the phone. Afterwards root it with Magisk and install HermesSIM-Host-Magisk.zip in Magisk → Modules.</string>
     <string name="unlock_cant">This phone reports that its bootloader can\'t be unlocked.</string>
     <string name="btn_dev_options">Open Developer options</string>
 
     <!-- root -->
     <string name="root_title">Root the phone with Magisk</string>
-    <string name="root_body">Install the Magisk app, patch this phone\'s boot image with it and flash the patched image (Samsung: with Odin). Magisk\'s guide explains each phone type. Then install TosbiSim-Host-Magisk.zip in Magisk → Modules and restart the phone.</string>
+    <string name="root_body">Install the Magisk app, patch this phone\'s boot image with it and flash the patched image (Samsung: with Odin). Magisk\'s guide explains each phone type. Then install HermesSIM-Host-Magisk.zip in Magisk → Modules and restart the phone.</string>
     <string name="root_checking">Checking root… if Magisk asks, tap Grant.</string>
     <string name="root_no_su">No root found yet: install Magisk first (see its guide).</string>
     <string name="root_timeout">%1$s didn\'t answer. Tap Check root again and tap Grant when %1$s asks.</string>
@@ -41,7 +41,7 @@
 
     <!-- module -->
     <string name="install_title">Install the HermesSIM Host module</string>
-    <string name="install_body">Root works. In the Magisk app, open Modules → Install from storage, choose TosbiSim-Host-Magisk.zip (from tosbisim.com) and restart the phone. HermesSIM starts by itself and this screen continues from there.</string>
+    <string name="install_body">Root works. In the Magisk app, open Modules → Install from storage, choose HermesSIM-Host-Magisk.zip (from tosbisim.com) and restart the phone. HermesSIM starts by itself and this screen continues from there.</string>
     <string name="btn_install">Install</string>
     <string name="btn_installing">Installing…</string>
     <string name="install_failed_title">The install didn\'t finish</string>
@@ -52,8 +52,8 @@
     <string name="btn_restart">Restart now</string>
     <string name="inactive_title">The module isn\'t active</string>
     <string name="inactive_disabled">It is turned off in %1$s → %2$s. Turn it on there, then restart the phone.</string>
-    <string name="inactive_removing">%1$s is set to remove it at the next restart. To keep HermesSIM, install TosbiSim-Host-Magisk.zip in %1$s → %2$s again, then restart.</string>
-    <string name="inactive_none">It isn\'t installed any more. Install TosbiSim-Host-Magisk.zip in %1$s → %2$s, then restart.</string>
+    <string name="inactive_removing">%1$s is set to remove it at the next restart. To keep HermesSIM, install HermesSIM-Host-Magisk.zip in %1$s → %2$s again, then restart.</string>
+    <string name="inactive_none">It isn\'t installed any more. Install HermesSIM-Host-Magisk.zip in %1$s → %2$s, then restart.</string>
     <string name="inactive_pending">It is installed and waits for a restart.</string>
     <string name="inactive_other">The phone restarted but HermesSIM didn\'t start as a system app. Reinstall the module; if that doesn\'t help, send a report below.</string>
     <string name="btn_reinstall">Reinstall the module</string>
@@ -173,7 +173,7 @@
     <string name="retire_note">Gives the phone back for normal use: its sounds, vibration, screen and buttons, its own phone and messaging apps and Wi-Fi come back, your phone forgets it, and HermesSIM is removed. The phone restarts at the end. %1$s and the unlocked bootloader stay.</string>
     <string name="retire_btn">Stop using as a host…</string>
     <string name="retire_confirm_title">Remove HermesSIM from this phone?</string>
-    <string name="retire_confirm_body">Your phone will stop getting this SIM\'s calls and messages. To use the phone as a host again later, install TosbiSim-Host-Magisk.zip in %1$s → %2$s and pair it again.\n\n%1$s (root) and the unlocked bootloader stay: they were set up before HermesSIM. To make the phone fully stock, uninstall %1$s from its own app afterwards.</string>
+    <string name="retire_confirm_body">Your phone will stop getting this SIM\'s calls and messages. To use the phone as a host again later, install HermesSIM-Host-Magisk.zip in %1$s → %2$s and pair it again.\n\n%1$s (root) and the unlocked bootloader stay: they were set up before HermesSIM. To make the phone fully stock, uninstall %1$s from its own app afterwards.</string>
     <string name="retire_confirm_yes">Remove and restart</string>
     <string name="retire_step_client">Telling your phone…</string>
     <string name="retire_step_settings">Giving back the phone\'s settings…</string>

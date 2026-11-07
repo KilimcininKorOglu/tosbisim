@@ -289,7 +289,7 @@ object Relay {
             return Log.i(TAG, "rig running: ${env.bodyCase} from the client ignored").let { }
         when (env.bodyCase) {
             Envelope.BodyCase.KEEP_ALIVE -> Log.i(TAG, "keep-alive ack n=${env.keepAlive.n}")
-            // Basic mode (no measured call audio yet): TosbiSim stays out of calls, except the guided call test.
+            // Basic mode (no measured call audio yet): HermesSIM stays out of calls, except the guided call test.
             // A call answered without relayed audio would play through the host itself (18 Oct).
             Envelope.BodyCase.CALL_ACTION ->
                 if (env.callAction.action == com.keremgok.hermessim.protocol.v1.CallAction.Action.ANSWER && !VoiceGate.fullVoice)

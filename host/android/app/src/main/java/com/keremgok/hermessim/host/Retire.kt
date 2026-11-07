@@ -17,7 +17,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * "Stop using this phone as a host": gives the phone back and removes TosbiSim. A host overrides a lot of the phone
+ * "Stop using this phone as a host": gives the phone back and removes HermesSIM. A host overrides a lot of the phone
  * (20 Oct 2026: people must be able to go back to using it as a phone): its sounds, vibration and Do Not Disturb,
  * box mode's screen, button and network settings, the default phone and messaging apps, root for the app, the module.
  *
@@ -26,11 +26,11 @@ import java.util.concurrent.TimeUnit
  * settings); the hotspot off; volumes and Do Not Disturb back; then a root script that outlives the app restores the
  * settings service.sh changed (from the snapshot it took before its first change, else Android's defaults), hands the
  * default apps back, turns Wi-Fi on, revokes root and the battery exemption, marks the module for removal, uninstalls
- * the app, deletes TosbiSim's files and restarts the phone (a Magisk module only goes away with a restart). Magisk and
+ * the app, deletes HermesSIM's files and restarts the phone (a Magisk module only goes away with a restart). Magisk and
  * the unlocked bootloader stay: they are the user's, not ours.
  * The script's first act marks the phone as given back ([givenBack]): until the app is gone, nothing makes it a host
  * again. It works the module out with the root manager's own tool (APatch, KernelSU) and keeps its log until a boot
- * script sees TosbiSim gone, so a removal that stops short says where.
+ * script sees HermesSIM gone, so a removal that stops short says where.
  */
 object Retire {
     private const val TAG = "HermesSimHost"
@@ -115,7 +115,7 @@ object Retire {
         exec.execute { run(app) }
     }
 
-    /** A call on this phone (ringing, dialling, active or held), seen by TosbiSim or by Telecom. */
+    /** A call on this phone (ringing, dialling, active or held), seen by HermesSIM or by Telecom. */
     @android.annotation.SuppressLint("MissingPermission")   // READ_PHONE_STATE from the module; a refusal is caught
     private fun inCall(app: Context) = CallRegistry.anyCall() ||
         runCatching { app.getSystemService(TelecomManager::class.java).isInCall }.getOrDefault(false)
@@ -133,7 +133,7 @@ object Retire {
             // As the updater: never mid-call (the script ends with a restart)
             if (inCall(app)) { failed = R.string.retire_in_call; return }
             if (Root.sh("id -u", 25_000).last != "0") { failed = R.string.retire_no_root; return }
-            // The phone app from before TosbiSim: remembered when the host took the role, else box mode's saved one
+            // The phone app from before HermesSIM: remembered when the host took the role, else box mode's saved one
             // (read before its restore drops it)
             val boxDialer = prefs(app).getString("dialer", null) ?: runCatching {
                 JSONObject(app.getSharedPreferences("box", Context.MODE_PRIVATE).getString("orig", "{}")!!).optString("dialer")
@@ -142,7 +142,7 @@ object Retire {
             val staged = runCatching { script.writeText(script(app, boxDialer)) }.isSuccess &&
                 Root.sh("cp ${Root.q(script.path)} $REMOVER && chmod 700 $REMOVER", 15_000).ok
             if (!staged) { failed = R.string.retire_prepare_failed; return }
-            Log.i(TAG, "RETIRE: giving the phone back and removing TosbiSim")
+            Log.i(TAG, "RETIRE: giving the phone back and removing HermesSIM")
             Diag.event("host_removed", JSONObject().put("what", "user"), withLog = false, force = true)
 
             touched = true
@@ -198,7 +198,7 @@ object Retire {
     }
 
     /**
-     * Sound as it was before TosbiSim (a silent snapshot, from a phone set up before snapshots, gives 2/3). Do Not
+     * Sound as it was before HermesSIM (a silent snapshot, from a phone set up before snapshots, gives 2/3). Do Not
      * Disturb first, then the ringer, then volumes: under total silence Android refuses the ringer mode and holds ring
      * volumes at zero (audit, 20 Oct 2026). Then the call volume and mic Basic mode's call silence may have left.
      */
@@ -237,9 +237,9 @@ object Retire {
         fun q(s: String) = Root.q(s)
         return """
             |#!/system/bin/sh
-            |# TosbiSim: give this phone back (the host app's "Stop using this phone as a host").
+            |# HermesSIM: give this phone back (the host app's "Stop using this phone as a host").
             |PKG=$PKG
-            |ORIG=/data/adb/tosbisim/original-settings.txt
+            |ORIG=/data/adb/hermessim/original-settings.txt
             |LOG=/data/local/tmp/tosbisim-removed.log
             |orig() { grep "^${'$'}1 ${'$'}2 " "${'$'}ORIG" 2>/dev/null | head -1 | cut -d' ' -f3-; }
             |put() { v=${'$'}(orig ${'$'}1 ${'$'}2); [ -z "${'$'}v" ] && v=${'$'}3
@@ -252,12 +252,12 @@ object Retire {
             |settings put global ${Mark.KEY} "${'$'}(settings get global boot_count)"
             |mkdir -p /data/adb/service.d && cat > ${Mark.CLEANER} <<'END'
             |#!/system/bin/sh
-            |# TosbiSim's removal, after a restart: finished once the app is gone, else still given back (and said so)
+            |# HermesSIM's removal, after a restart: finished once the app is gone, else still given back (and said so)
             |until [ "${'$'}(getprop sys.boot_completed)" = 1 ]; do sleep 2; done
             |L=/data/local/tmp/tosbisim-removed.log
             |if pm path $PKG >/dev/null 2>&1; then
             |  settings put global ${Mark.KEY} "${'$'}(settings get global boot_count):after"
-            |  echo "${'$'}(date) TosbiSim is still installed after a restart" >> ${'$'}L
+            |  echo "${'$'}(date) HermesSIM is still installed after a restart" >> ${'$'}L
             |  exit 0
             |fi
             |settings delete global ${Mark.KEY}
@@ -265,7 +265,7 @@ object Retire {
             |rm -f "${'$'}0"
             |END
             |chmod 755 ${Mark.CLEANER}
-            |# TosbiSim stops first, for good: the app restarted from the module's system copy in the last seconds (pm
+            |# HermesSIM stops first, for good: the app restarted from the module's system copy in the last seconds (pm
             |# uninstall only removes its update) and silenced the phone again before the restart (20 Oct 2026). Without
             |# root and stopped it can't come back before the restart, which removes the module.
             |fail=0
@@ -301,7 +301,7 @@ object Retire {
             |  put system call_end_tone 1; put system call_conn_tone 1; put system volume_waiting_tone 1
             |  put secure wifi_ap_timeout_setting null      # Samsung's own hotspot timer (the host synced it)
             |fi
-            |# Default apps: the ones from before TosbiSim, else the phone's own
+            |# Default apps: the ones from before HermesSIM, else the phone's own
             |sms=${'$'}(orig secure sms_default_application); usable "${'$'}sms" || sms=${q(systemSmsApp(app))}
             |usable "${'$'}sms" || sms=${'$'}(cmd package query-receivers --brief -a android.provider.Telephony.SMS_DELIVER 2>/dev/null \
             |  | grep / | tr -d ' ' | cut -d/ -f1 | grep -v "^${'$'}PKG${'$'}" | head -1)
@@ -310,7 +310,7 @@ object Retire {
             |usable "${'$'}dialer" || dialer=${q(systemDialer)}
             |usable "${'$'}dialer" && cmd role add-role-holder android.app.role.DIALER "${'$'}dialer" 0 && echo "phone app: ${'$'}dialer"
             |cmd wifi set-wifi-enabled enabled
-            |# Do Not Disturb last, once nothing of TosbiSim runs; Android saves it a moment later, so wait until it reads back
+            |# Do Not Disturb last, once nothing of HermesSIM runs; Android saves it a moment later, so wait until it reads back
             |case "${'$'}(orig global zen_mode)" in 1) dnd=priority; z=1;; 3) dnd=alarms; z=3;; *) dnd=off; z=0;; esac
             |am force-stop ${'$'}PKG
             |for i in 1 2 3 4 5 6 7 8 9 10; do
@@ -319,12 +319,12 @@ object Retire {
             |done
             |[ "${'$'}(settings get global zen_mode)" = "${'$'}z" ] || { echo "Do Not Disturb didn't change"; fail=1; }
             |cmd audio set-ringer-mode NORMAL 2>/dev/null
-            |rm -rf /data/adb/tosbisim /data/local/tmp/hermessim-service.log /data/local/tmp/hermessim-service.log.1 || fail=1
+            |rm -rf /data/adb/hermessim /data/local/tmp/hermessim-service.log /data/local/tmp/hermessim-service.log.1 || fail=1
             |echo "${'$'}(date) done (failures: ${'$'}fail), restarting"
             |} >> "${'$'}LOG" 2>&1
             |rm -f "${'$'}0"
             |sync; sleep 5                            # Android's own settings files (Do Not Disturb) reach the disk
-            |# The log stays until the boot script finds TosbiSim gone (then it goes too, when every step worked): deleted
+            |# The log stays until the boot script finds HermesSIM gone (then it goes too, when every step worked): deleted
             |# here, a restart that never came left no trace (4 Nov 2026). Each way to restart is checked by still running.
             |svc power reboot
             |sleep 20; echo "${'$'}(date) still running 20 s after svc power reboot: reboot" >> "${'$'}LOG"; reboot

@@ -97,7 +97,7 @@ class HostService : Service() {
 
     /**
      * The first start after the Magisk install (a restart): the person who just installed it sees the home screen and
-     * no sign of TosbiSim. Open the host's own screen once, at the "pair your iPhone" step (20 Oct 2026 rehearsal).
+     * no sign of HermesSIM. Open the host's own screen once, at the "pair your iPhone" step (20 Oct 2026 rehearsal).
      */
     private fun welcomeOnce() {
         val p = getSharedPreferences("onboarding", MODE_PRIVATE)

@@ -142,7 +142,7 @@ static void enum_items(const struct snd_ctl_elem_info *in, char *out, size_t len
 // disturb the hardware. What the phone's own sound card offers is what lets a family be built and proven from users'
 // phones instead of donor phones (docs/10-proving-voice-paths.md). One line per control:
 //   numid<TAB>name<TAB>type<TAB>count<TAB>min..max | enum item|item|...
-#define INVENTORY_FILE "/data/adb/tosbisim/inventory.txt"
+#define INVENTORY_FILE "/data/adb/hermessim/inventory.txt"
 static int inventory(const char *path) {
     if (g_ctl < 0) return -1;
     struct snd_ctl_elem_list list;
@@ -217,9 +217,9 @@ static int value_ok(const char *name, const struct snd_ctl_elem_info *in, const 
 // in STATUS, so a write that crashes a kernel can't become a reboot loop. The linger was 60 s and the crumb outlived
 // clean exits: a normal reboot right after a call put the next boot in safe mode, without its silence controls
 // (audit, 20 Oct 2026). A kernel that dies on a write dies within moments of it.
-#define CRUMB "/data/adb/tosbisim/applying"
+#define CRUMB "/data/adb/hermessim/applying"
 #define CRUMB_LINGER_S 5
-#define SAFE_FILE "/data/adb/tosbisim/safe"     // the boot id safe mode belongs to: it lasts the whole boot
+#define SAFE_FILE "/data/adb/hermessim/safe"     // the boot id safe mode belongs to: it lasts the whole boot
 static char g_boot_id[48] = "";
 static int g_safe = 0;
 static struct timespec g_crumb_until;
@@ -426,7 +426,7 @@ static int silence_add(const char *spec) {
 // profile's call controls in call state until reboot (audit, 20 Oct 2026). Written when a call applies them, removed
 // when they are restored; found at start (same boot only), they are put back. One control per line,
 // "<name>\t<v1>,<v2>...", after a "boot <id>" line; a line without its newline (cut short) is ignored.
-#define CALL_ORIG "/data/adb/tosbisim/call-originals"
+#define CALL_ORIG "/data/adb/hermessim/call-originals"
 
 static void call_orig_save(void) {
     FILE *f = fopen(CALL_ORIG ".tmp", "we");

@@ -8,20 +8,20 @@
   {
     "version": "0.12.25",
     "code": 61,
-    "en": "A host whose TosbiSim data was cleared (in Android's app settings) no longer stops working until the next restart: it gets its Bluetooth permission back by itself and starts again. Problem reports leave out the phone's repetitive call-account messages, so they show more of what TosbiSim itself did.",
-    "tr": "TosbiSim verileri (Android'in uygulama ayarlarından) silinen bir ana cihaz artık bir sonraki yeniden başlatmaya kadar çalışmaz hale gelmiyor: Bluetooth iznini kendisi geri alıyor ve yeniden başlıyor. Sorun raporları telefonun tekrarlayan arama hesabı mesajlarını dışarıda bırakıyor; böylece TosbiSim'in kendi yaptıklarını daha uzun bir süre gösteriyor."
+    "en": "A host whose HermesSIM data was cleared (in Android's app settings) no longer stops working until the next restart: it gets its Bluetooth permission back by itself and starts again. Problem reports leave out the phone's repetitive call-account messages, so they show more of what HermesSIM itself did.",
+    "tr": "HermesSIM verileri (Android'in uygulama ayarlarından) silinen bir ana cihaz artık bir sonraki yeniden başlatmaya kadar çalışmaz hale gelmiyor: Bluetooth iznini kendisi geri alıyor ve yeniden başlıyor. Sorun raporları telefonun tekrarlayan arama hesabı mesajlarını dışarıda bırakıyor; böylece HermesSIM'in kendi yaptıklarını daha uzun bir süre gösteriyor."
   },
   {
     "version": "0.12.24",
     "code": 60,
-    "en": "TosbiSim now works on phones rooted with APatch: it gets root by itself, as with Magisk, and its screens name APatch's own menus. On APatch or KernelSU without a mount metamodule, the install now stops and says what is missing, instead of leaving no app. \"Stop using this phone as a host\" keeps TosbiSim out of the way until it is really gone, also if a restart left it installed, and keeps a note if the phone didn't restart.",
-    "tr": "TosbiSim artık APatch ile rootlanmış telefonlarda da çalışıyor: root iznini Magisk'teki gibi kendisi alıyor ve ekranlarında APatch'in kendi menülerinin adı geçiyor. Bağlama metamodülü olmayan APatch veya KernelSU'da kurulum artık uygulamasız kalmak yerine durup neyin eksik olduğunu söylüyor. \"Bu telefonu ana cihaz olarak kullanmayı bırak\" TosbiSim gerçekten kaldırılana kadar, yeniden başlatmadan sonra kurulu kalsa bile devreye girmiyor ve telefon yeniden başlamazsa bunu kaydediyor."
+    "en": "HermesSIM now works on phones rooted with APatch: it gets root by itself, as with Magisk, and its screens name APatch's own menus. On APatch or KernelSU without a mount metamodule, the install now stops and says what is missing, instead of leaving no app. \"Stop using this phone as a host\" keeps HermesSIM out of the way until it is really gone, also if a restart left it installed, and keeps a note if the phone didn't restart.",
+    "tr": "HermesSIM artık APatch ile rootlanmış telefonlarda da çalışıyor: root iznini Magisk'teki gibi kendisi alıyor ve ekranlarında APatch'in kendi menülerinin adı geçiyor. Bağlama metamodülü olmayan APatch veya KernelSU'da kurulum artık uygulamasız kalmak yerine durup neyin eksik olduğunu söylüyor. \"Bu telefonu ana cihaz olarak kullanmayı bırak\" HermesSIM gerçekten kaldırılana kadar, yeniden başlatmadan sonra kurulu kalsa bile devreye girmiyor ve telefon yeniden başlamazsa bunu kaydediyor."
   },
   {
     "version": "0.12.23",
     "code": 59,
-    "en": "\"Stop using this phone as a host\" can no longer leave TosbiSim half-removed: if the phone doesn't restart at the end, TosbiSim stays out of the way until it does (no Do Not Disturb, no taking back the phone and messaging apps, no muted calls). A call answered on the host phone itself with another phone app is never muted. Older Galaxy phones with an Exynos 7870 or 7570 chip are now expected to work: a Galaxy J7 Prime passed the call test.",
-    "tr": "\"Bu telefonu ana cihaz olarak kullanmayı bırak\" artık TosbiSim'i yarım kaldırılmış bırakmaz: telefon sonunda yeniden başlamazsa TosbiSim o zamana kadar devreye girmez (Rahatsız Etmeyin'i açmaz, telefon ve mesaj uygulamalarını geri almaz, aramaları sessize almaz). Ana cihazın kendisinde başka bir telefon uygulamasıyla açılan bir arama hiç sessize alınmaz. Exynos 7870 ya da 7570 işlemcili eski Galaxy telefonların artık çalışması bekleniyor: bir Galaxy J7 Prime arama testini geçti."
+    "en": "\"Stop using this phone as a host\" can no longer leave HermesSIM half-removed: if the phone doesn't restart at the end, HermesSIM stays out of the way until it does (no Do Not Disturb, no taking back the phone and messaging apps, no muted calls). A call answered on the host phone itself with another phone app is never muted. Older Galaxy phones with an Exynos 7870 or 7570 chip are now expected to work: a Galaxy J7 Prime passed the call test.",
+    "tr": "\"Bu telefonu ana cihaz olarak kullanmayı bırak\" artık HermesSIM'i yarım kaldırılmış bırakmaz: telefon sonunda yeniden başlamazsa HermesSIM o zamana kadar devreye girmez (Rahatsız Etmeyin'i açmaz, telefon ve mesaj uygulamalarını geri almaz, aramaları sessize almaz). Ana cihazın kendisinde başka bir telefon uygulamasıyla açılan bir arama hiç sessize alınmaz. Exynos 7870 ya da 7570 işlemcili eski Galaxy telefonların artık çalışması bekleniyor: bir Galaxy J7 Prime arama testini geçti."
   },
   {
     "version": "0.12.22",
@@ -50,8 +50,8 @@
   {
     "version": "0.12.18",
     "code": 54,
-    "en": "TosbiSim now has an Android app too: this phone's screens and messages speak of your phone, iPhone or Android, instead of only an iPhone.",
-    "tr": "TosbiSim'in artık bir Android uygulaması da var: bu telefonun ekranları ve mesajları yalnızca iPhone'dan değil, iPhone ya da Android telefonunuzdan söz ediyor."
+    "en": "HermesSIM now has an Android app too: this phone's screens and messages speak of your phone, iPhone or Android, instead of only an iPhone.",
+    "tr": "HermesSIM'in artık bir Android uygulaması da var: bu telefonun ekranları ve mesajları yalnızca iPhone'dan değil, iPhone ya da Android telefonunuzdan söz ediyor."
   },
   {
     "version": "0.12.17",
@@ -62,8 +62,8 @@
   {
     "version": "0.12.16",
     "code": 52,
-    "en": "TosbiSim Host now also installs on phones with 32-bit Android: cheaper models, and older phones on custom firmware. Setup also stops turning away phones whose older Bluetooth chip can host. And a call over Bluetooth now lets go of its audio the moment it ends.",
-    "tr": "TosbiSim Host artık 32 bit Android çalıştıran telefonlara da kuruluyor: daha uygun fiyatlı modeller ve özel yazılımlı eski telefonlar. Kurulum, eski Bluetooth yongası ana cihaz olmaya yeten telefonları da artık geri çevirmiyor. Bluetooth üzerinden bir arama da artık biter bitmez sesini bırakıyor."
+    "en": "HermesSIM Host now also installs on phones with 32-bit Android: cheaper models, and older phones on custom firmware. Setup also stops turning away phones whose older Bluetooth chip can host. And a call over Bluetooth now lets go of its audio the moment it ends.",
+    "tr": "HermesSIM Host artık 32 bit Android çalıştıran telefonlara da kuruluyor: daha uygun fiyatlı modeller ve özel yazılımlı eski telefonlar. Kurulum, eski Bluetooth yongası ana cihaz olmaya yeten telefonları da artık geri çevirmiyor. Bluetooth üzerinden bir arama da artık biter bitmez sesini bırakıyor."
   },
   {
     "version": "0.12.15",
@@ -74,8 +74,8 @@
   {
     "version": "0.12.14",
     "code": 50,
-    "en": "Calls you make sound as they do on a phone: your iPhone stays quiet until the other phone actually rings, then plays the network's own ringing tone, or its own if the network sends none (now Turkey's real one: 450 Hz, 2 seconds on). Before, it rang from the moment you dialled and then switched to the network's tone, so a call could ring in two different tones. Needs the latest TosbiSim on the iPhone.",
-    "tr": "Yaptığınız aramalar bir telefondaki gibi duyuluyor: iPhone'unuz karşı taraftaki telefon gerçekten çalana kadar sessiz kalıyor, sonra şebekenin kendi çalma sesini, şebeke göndermezse kendi sesini çalıyor (artık Türkiye'nin gerçek sesi: 450 Hz, 2 saniye). Önceden aradığınız anda çalmaya başlıyor, sonra şebekenin sesine geçiyordu; bir arama iki farklı sesle çalabiliyordu. iPhone'da TosbiSim'in son sürümü gerekir."
+    "en": "Calls you make sound as they do on a phone: your iPhone stays quiet until the other phone actually rings, then plays the network's own ringing tone, or its own if the network sends none (now Turkey's real one: 450 Hz, 2 seconds on). Before, it rang from the moment you dialled and then switched to the network's tone, so a call could ring in two different tones. Needs the latest HermesSIM on the iPhone.",
+    "tr": "Yaptığınız aramalar bir telefondaki gibi duyuluyor: iPhone'unuz karşı taraftaki telefon gerçekten çalana kadar sessiz kalıyor, sonra şebekenin kendi çalma sesini, şebeke göndermezse kendi sesini çalıyor (artık Türkiye'nin gerçek sesi: 450 Hz, 2 saniye). Önceden aradığınız anda çalmaya başlıyor, sonra şebekenin sesine geçiyordu; bir arama iki farklı sesle çalabiliyordu. iPhone'da HermesSIM'in son sürümü gerekir."
   },
   {
     "version": "0.12.13",
@@ -92,20 +92,20 @@
   {
     "version": "0.12.10",
     "code": 46,
-    "en": "Calls and texts wake your iPhone even with Internet mode off: push wake-ups now have their own encrypted key, handed over Bluetooth. Needs TosbiSim 0.9.5 on the iPhone.",
-    "tr": "İnternet modu kapalıyken bile aramalar ve mesajlar iPhone'unuzu uyandırıyor: uyandırma bildirimlerinin artık Bluetooth ile verilen kendi şifreli anahtarı var. iPhone'da TosbiSim 0.9.5 gerekir."
+    "en": "Calls and texts wake your iPhone even with Internet mode off: push wake-ups now have their own encrypted key, handed over Bluetooth. Needs HermesSIM 0.9.5 on the iPhone.",
+    "tr": "İnternet modu kapalıyken bile aramalar ve mesajlar iPhone'unuzu uyandırıyor: uyandırma bildirimlerinin artık Bluetooth ile verilen kendi şifreli anahtarı var. iPhone'da HermesSIM 0.9.5 gerekir."
   },
   {
     "version": "0.12.9",
     "code": 45,
-    "en": "With Internet mode on, calls and texts now reach your iPhone even when iOS has closed TosbiSim: the host has Apple wake your iPhone with an end-to-end encrypted push (our server and Apple see only ciphertext). Needs TosbiSim 0.9 on the iPhone.",
-    "tr": "İnternet modu açıkken aramalar ve mesajlar, iOS TosbiSim'i kapatmış olsa bile artık iPhone'unuza ulaşıyor: ana cihaz, uçtan uca şifreli bir bildirimle Apple'a iPhone'unuzu uyandırtıyor (sunucumuz ve Apple yalnızca şifreli veriyi görür). iPhone'da TosbiSim 0.9 gerekir."
+    "en": "With Internet mode on, calls and texts now reach your iPhone even when iOS has closed HermesSIM: the host has Apple wake your iPhone with an end-to-end encrypted push (our server and Apple see only ciphertext). Needs HermesSIM 0.9 on the iPhone.",
+    "tr": "İnternet modu açıkken aramalar ve mesajlar, iOS HermesSIM'i kapatmış olsa bile artık iPhone'unuza ulaşıyor: ana cihaz, uçtan uca şifreli bir bildirimle Apple'a iPhone'unuzu uyandırtıyor (sunucumuz ve Apple yalnızca şifreli veriyi görür). iPhone'da HermesSIM 0.9 gerekir."
   },
   {
     "version": "0.12.8",
     "code": 44,
-    "en": "Automatic hotspot is more dependable while your iPhone sleeps: when your iPhone moves to another Wi-Fi, the host itself turns the hotspot off once nothing uses it for a minute, and the host checks in with your iPhone every few minutes even in deep sleep. On Samsung hosts, the phone's own 20-minute hotspot timer now follows TosbiSim's auto off setting.",
-    "tr": "Otomatik erişim noktası iPhone'unuz uykudayken daha güvenilir: iPhone'unuz başka bir Wi-Fi'a geçince ana cihaz, bir dakika boyunca hiçbir şey kullanmadığında erişim noktasını kendisi kapatıyor; ana cihaz derin uykuda da birkaç dakikada bir iPhone'unuzla haberleşiyor. Samsung ana cihazlarda telefonun kendi 20 dakikalık erişim noktası zamanlayıcısı artık TosbiSim'in otomatik kapatma ayarına uyuyor."
+    "en": "Automatic hotspot is more dependable while your iPhone sleeps: when your iPhone moves to another Wi-Fi, the host itself turns the hotspot off once nothing uses it for a minute, and the host checks in with your iPhone every few minutes even in deep sleep. On Samsung hosts, the phone's own 20-minute hotspot timer now follows HermesSIM's auto off setting.",
+    "tr": "Otomatik erişim noktası iPhone'unuz uykudayken daha güvenilir: iPhone'unuz başka bir Wi-Fi'a geçince ana cihaz, bir dakika boyunca hiçbir şey kullanmadığında erişim noktasını kendisi kapatıyor; ana cihaz derin uykuda da birkaç dakikada bir iPhone'unuzla haberleşiyor. Samsung ana cihazlarda telefonun kendi 20 dakikalık erişim noktası zamanlayıcısı artık HermesSIM'in otomatik kapatma ayarına uyuyor."
   },
   {
     "version": "0.12.7",
@@ -116,14 +116,14 @@
   {
     "version": "0.12.6",
     "code": 42,
-    "en": "Installing is now one step: the TosbiSim Host Magisk zip, installed from the Magisk app (Play Protect blocks a downloaded app). After the restart the host opens its screen by itself, ready to pair.\nTosbiSim is the phone app from the start and keeps the host silent through every call, box mode or not.\nThe host repairs itself if an update or Android takes away a permission, the battery exemption or the SMS role.\nNew: \"Stop using this phone as a host\" gives the phone back as an ordinary phone (sounds, screen and button settings, Wi-Fi, its own phone and messaging apps), your iPhone forgets it, and TosbiSim removes itself and restarts the phone.",
-    "tr": "Kurulum artık tek adım: TosbiSim Host Magisk zip dosyası, Magisk uygulamasından kurulur (Play Protect indirilen uygulamayı engelliyor). Yeniden başladıktan sonra ana cihaz ekranını kendiliğinden açar, eşleşmeye hazırdır.\nTosbiSim baştan telefon uygulamasıdır ve kutu modu açık olsun olmasın her aramada ana cihazı sessiz tutar.\nBir güncelleme veya Android bir izni, pil muafiyetini ya da SMS rolünü alırsa ana cihaz kendini onarır.\nYeni: \"Bu telefonu ana cihaz olarak kullanmayı bırak\" telefonu sıradan bir telefon olarak geri verir (sesler, ekran ve tuş ayarları, Wi-Fi, kendi telefon ve mesaj uygulamaları), iPhone'unuz onu unutur, TosbiSim kendini kaldırıp telefonu yeniden başlatır."
+    "en": "Installing is now one step: the HermesSIM Host Magisk zip, installed from the Magisk app (Play Protect blocks a downloaded app). After the restart the host opens its screen by itself, ready to pair.\nHermesSIM is the phone app from the start and keeps the host silent through every call, box mode or not.\nThe host repairs itself if an update or Android takes away a permission, the battery exemption or the SMS role.\nNew: \"Stop using this phone as a host\" gives the phone back as an ordinary phone (sounds, screen and button settings, Wi-Fi, its own phone and messaging apps), your iPhone forgets it, and HermesSIM removes itself and restarts the phone.",
+    "tr": "Kurulum artık tek adım: HermesSIM Host Magisk zip dosyası, Magisk uygulamasından kurulur (Play Protect indirilen uygulamayı engelliyor). Yeniden başladıktan sonra ana cihaz ekranını kendiliğinden açar, eşleşmeye hazırdır.\nHermesSIM baştan telefon uygulamasıdır ve kutu modu açık olsun olmasın her aramada ana cihazı sessiz tutar.\nBir güncelleme veya Android bir izni, pil muafiyetini ya da SMS rolünü alırsa ana cihaz kendini onarır.\nYeni: \"Bu telefonu ana cihaz olarak kullanmayı bırak\" telefonu sıradan bir telefon olarak geri verir (sesler, ekran ve tuş ayarları, Wi-Fi, kendi telefon ve mesaj uygulamaları), iPhone'unuz onu unutur, HermesSIM kendini kaldırıp telefonu yeniden başlatır."
   },
   {
     "version": "0.12.5",
     "code": 41,
-    "en": "Calls answered on the host phone itself are now left alone: only calls your iPhone made or answered go through TosbiSim. Before, a call taken on the host's own screen lost its microphone.\nCall audio no longer drops if a diagnostic tool checks on the host during a call.\nA call where the caller's voice never arrives is now reported (with diagnostics on), so it can be fixed.",
-    "tr": "Ana cihazın kendisinde yanıtlanan aramalara artık dokunulmuyor: yalnızca iPhone'unuzun yaptığı veya yanıtladığı aramalar TosbiSim üzerinden geçer. Önceden ana cihazın kendi ekranından açılan bir aramanın mikrofonu kesiliyordu.\nArama sırasında bir tanılama aracı ana cihazı yoklarsa arama sesi artık kesilmiyor.\nArayanın sesinin hiç gelmediği bir arama artık bildiriliyor (tanılama açıksa), böylece düzeltilebiliyor."
+    "en": "Calls answered on the host phone itself are now left alone: only calls your iPhone made or answered go through HermesSIM. Before, a call taken on the host's own screen lost its microphone.\nCall audio no longer drops if a diagnostic tool checks on the host during a call.\nA call where the caller's voice never arrives is now reported (with diagnostics on), so it can be fixed.",
+    "tr": "Ana cihazın kendisinde yanıtlanan aramalara artık dokunulmuyor: yalnızca iPhone'unuzun yaptığı veya yanıtladığı aramalar HermesSIM üzerinden geçer. Önceden ana cihazın kendi ekranından açılan bir aramanın mikrofonu kesiliyordu.\nArama sırasında bir tanılama aracı ana cihazı yoklarsa arama sesi artık kesilmiyor.\nArayanın sesinin hiç gelmediği bir arama artık bildiriliyor (tanılama açıksa), böylece düzeltilebiliyor."
   },
   {
     "version": "0.12.4",
@@ -188,8 +188,8 @@
   {
     "version": "0.10.2",
     "code": 30,
-    "en": "When you leave the host, an unused hotspot turns off by itself (so the host can use its Wi-Fi while you're away).\nNo hotspot start during an internet call.\nTosbiSim shows what the host's internet runs on: Wi-Fi or mobile data.",
-    "tr": "Ana cihazdan ayrıldığınızda kullanılmayan erişim noktası kendiliğinden kapanır (böylece siz uzaktayken ana cihaz Wi-Fi'ını kullanabilir).\nİnternet üzerinden arama sırasında erişim noktası açılmaz.\nTosbiSim, ana cihazın internetinin neyle çalıştığını gösterir: Wi-Fi veya mobil veri."
+    "en": "When you leave the host, an unused hotspot turns off by itself (so the host can use its Wi-Fi while you're away).\nNo hotspot start during an internet call.\nHermesSIM shows what the host's internet runs on: Wi-Fi or mobile data.",
+    "tr": "Ana cihazdan ayrıldığınızda kullanılmayan erişim noktası kendiliğinden kapanır (böylece siz uzaktayken ana cihaz Wi-Fi'ını kullanabilir).\nİnternet üzerinden arama sırasında erişim noktası açılmaz.\nHermesSIM, ana cihazın internetinin neyle çalıştığını gösterir: Wi-Fi veya mobil veri."
   },
   {
     "version": "0.10.1",
@@ -206,8 +206,8 @@
   {
     "version": "0.9.9",
     "code": 27,
-    "en": "Until a host passes its call test, TosbiSim stays out of calls: they ring on the host as usual and appear on your iPhone as missed calls.",
-    "tr": "Ana cihaz arama testini geçene kadar TosbiSim aramalara karışmaz: aramalar ana cihazda her zamanki gibi çalar ve iPhone'unuzda cevapsız arama olarak görünür."
+    "en": "Until a host passes its call test, HermesSIM stays out of calls: they ring on the host as usual and appear on your iPhone as missed calls.",
+    "tr": "Ana cihaz arama testini geçene kadar HermesSIM aramalara karışmaz: aramalar ana cihazda her zamanki gibi çalar ve iPhone'unuzda cevapsız arama olarak görünür."
   },
   {
     "version": "0.9.8",

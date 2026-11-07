@@ -253,7 +253,7 @@ class SetupActivity : Activity() {
         val sims = runCatching { Sims.status(this) }.getOrDefault(emptyList())
         val v = Compat.onThisPhone(Compat.verdict(this), Daemon.profile())
         val permsOk = runtimeMissing.isEmpty() && sms && dialer && battery && silent
-        // A PIN/pattern/password: after a restart or power cut TosbiSim can't start until someone unlocks the phone
+        // A PIN/pattern/password: after a restart or power cut HermesSIM can't start until someone unlocks the phone
         // (credential-encrypted storage), which nobody can on a phone without a screen (audit, 19 Oct).
         val locked = getSystemService(KeyguardManager::class.java).isDeviceSecure
         val daemonOk = d?.startsWith("OK") == true
@@ -654,7 +654,7 @@ class SetupActivity : Activity() {
         }
     }
 
-    /** "Stop using this phone as a host": the phone back as an ordinary phone, TosbiSim removed (Retire). */
+    /** "Stop using this phone as a host": the phone back as an ordinary phone, HermesSIM removed (Retire). */
     private fun retireCard() = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
         background = rounded(c.card, 16)

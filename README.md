@@ -28,7 +28,7 @@ Unlocking the bootloader erases the phone and may void its warranty. TosbiSim ne
 
 1. Check your phone on the [support page](https://mert-eren-karabulut.github.io/tosbisim/), then unlock the
    bootloader and install [Magisk](https://github.com/topjohnwu/Magisk) (see its guide for your phone).
-2. On the phone, download `TosbiSim-Host-<version>-Magisk.zip` from the Releases page.
+2. On the phone, download `HermesSIM-Host-<version>-Magisk.zip` from the Releases page.
 3. Open Magisk → *Modules* → *Install from storage* → choose the zip → *Reboot*. TosbiSim Host starts by itself
    after the restart. (There is no separate app to install: Google Play Protect blocks it on many phones; the
    Magisk module carries it.)
@@ -57,7 +57,7 @@ Host: GPL-3.0-or-later ([LICENSE](LICENSE)). Protocol: MIT ([protocol/LICENSE](p
 telefona takın, çekmeceye koyun; aramalar, mesajlar ve mobil veri Bluetooth ile iPhone'unuza gelsin. Hangi
 telefonların çalıştığını [destek sayfasında](https://mert-eren-karabulut.github.io/tosbisim/) görebilirsiniz. Arama
 sesi, her telefonda kısa bir arama testinden sonra açılır. Kurulum: önyükleyici kilidini açıp Magisk kurun,
-`TosbiSim-Host-<sürüm>-Magisk.zip` dosyasını Releases sayfasından telefona indirin, Magisk → *Modüller* →
+`HermesSIM-Host-<sürüm>-Magisk.zip` dosyasını Releases sayfasından telefona indirin, Magisk → *Modüller* →
 *Depolamadan yükle* ile seçip *Yeniden başlat*'a dokunun (ayrı bir uygulama kurmanız gerekmez). Ardından
 iPhone'dan eşleştirip arama testini yapın. Telefonu geri almak için ekranındaki *Bu telefonu ana cihaz olarak
 kullanmayı bırak*'a dokunun. TosbiSim telefonun IMEI'sini asla değiştirmez.

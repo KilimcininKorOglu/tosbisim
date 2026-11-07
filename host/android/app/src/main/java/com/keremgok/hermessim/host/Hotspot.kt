@@ -114,7 +114,7 @@ object Hotspot {
     /**
      * Samsung runs its own "turn the hotspot off when nothing is connected" timer next to Android's (secure setting
      * wifi_ap_timeout_setting, minutes, 0 = never; the carrier default is 20). It switched the hotspot off after 20 idle
-     * minutes while TosbiSim's auto off was off (22 Oct 2026): it follows TosbiSim's setting now. Other makers: no-op.
+     * minutes while HermesSIM's auto off was off (22 Oct 2026): it follows HermesSIM's setting now. Other makers: no-op.
      */
     private fun syncVendorTimeout(ctx: Context, autoOff: Boolean, minutes: Int) {
         if (!android.os.Build.MANUFACTURER.equals("samsung", ignoreCase = true)) return
@@ -123,7 +123,7 @@ object Hotspot {
             val cr = ctx.contentResolver
             if (android.provider.Settings.Secure.getInt(cr, "wifi_ap_timeout_setting", -1) == want) return
             android.provider.Settings.Secure.putInt(cr, "wifi_ap_timeout_setting", want)
-            Log.i(TAG, "Samsung hotspot timeout -> ${if (want == 0) "never" else "$want min"} (TosbiSim's auto off)")
+            Log.i(TAG, "Samsung hotspot timeout -> ${if (want == 0) "never" else "$want min"} (HermesSIM's auto off)")
         }.onFailure { Log.w(TAG, "Samsung hotspot timeout: $it") }
     }
 
@@ -201,7 +201,7 @@ object Hotspot {
     /**
      * The idle timeout in force: 0 (Android 11-12) and -1 (13+) mean the framework's default, 10 minutes in AOSP. Taken
      * at face value they reported 0 minutes and set Samsung's own idle timer to 1 minute on any Samsung host whose
-     * hotspot settings were never saved from TosbiSim (audit, 1 Nov 2026).
+     * hotspot settings were never saved from HermesSIM (audit, 1 Nov 2026).
      */
     private fun timeout(ms: Long?): Long = ms?.takeIf { it > 0 } ?: 600_000L
 

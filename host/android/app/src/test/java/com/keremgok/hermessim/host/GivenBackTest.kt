@@ -27,7 +27,7 @@ class GivenBackTest {
         assertTrue(BasicSilence.wanted(clientsCall = true, ourPhoneApp = false))
     }
 
-    @Test fun anotherCallIsSilencedOnlyWhileTosbiSimIsThePhoneApp() {
+    @Test fun anotherCallIsSilencedOnlyWhileHermesSimIsThePhoneApp() {
         assertTrue(BasicSilence.wanted(clientsCall = false, ourPhoneApp = true))     // unchanged: a host in a drawer
         assertFalse(BasicSilence.wanted(clientsCall = false, ourPhoneApp = false))   // a person answered it on this phone
     }

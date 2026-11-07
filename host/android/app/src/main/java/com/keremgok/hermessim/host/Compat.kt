@@ -12,7 +12,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
- * Compatibility of this phone, readable without root: the TosbiSim Host APK is installed as a normal app first and
+ * Compatibility of this phone, readable without root: the HermesSIM Host APK is installed as a normal app first and
  * tells people what their phone can do before they root it. Tiers come from profiles/support.json (shared with the
  * iPhone app and the support page). Full voice still needs the in-app call test on every phone.
  */
@@ -207,7 +207,7 @@ object Compat {
 /** Installs the embedded module (no APK inside: it adopts this installed app) with the root manager's own installer. */
 object Installer {
     private const val TAG = "HermesSimHost"
-    private const val ASSET = "module/tosbisim-host-module.zip"
+    private const val ASSET = "module/hermessim-host-module.zip"
 
     private val running = java.util.concurrent.atomic.AtomicBoolean(false)
 
@@ -220,7 +220,7 @@ object Installer {
 
     private fun run(ctx: Context, done: (ok: Boolean, log: String) -> Unit) {
         val r = runCatching {
-            val zip = File(ctx.cacheDir, "tosbisim-host-module.zip")
+            val zip = File(ctx.cacheDir, "hermessim-host-module.zip")
             ctx.assets.open(ASSET).use { i -> zip.outputStream().use { i.copyTo(it) } }
             // APatch and KernelSU install modules with their own daemon; told apart as root by its files, not by app
             val z = Root.q(zip.absolutePath)
