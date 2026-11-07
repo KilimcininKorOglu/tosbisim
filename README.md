@@ -40,7 +40,12 @@ Unlocking the bootloader erases the phone and may void its warranty. TosbiSim ne
 ## Building from source
 
 - Host app + daemon + module: `host/release.sh` (needs the Android SDK/NDK and your own signing key in
-  `~/.tosbisim/signing.properties`), or the developer loop in [host/README.md](host/README.md).
+  `host/signing/` as `release.jks` + `signing.properties`, gitignored, or the `HERMESSIM_SIGNING_*` environment
+  variables), or the developer loop in [host/README.md](host/README.md).
+- Releases: push a tag `host-v<versionName>` (for example `host-v1.0.0`). The
+  [Release host](.github/workflows/release.yml) workflow builds the signed Magisk zip and publishes the GitHub release.
+  It needs the repository secrets `HERMESSIM_SIGNING_KEYSTORE_B64` (base64 of `release.jks`),
+  `HERMESSIM_SIGNING_STORE_PASSWORD`, `HERMESSIM_SIGNING_KEY_ALIAS` and `HERMESSIM_SIGNING_KEY_PASSWORD`.
 - Protocol shared with the iPhone app: [protocol/](protocol/) (MIT).
 - Device profiles and the support table: [profiles/](profiles/). Measuring a new phone: [tools/](tools/)
   (read-only dump + the four live-call experiments).
