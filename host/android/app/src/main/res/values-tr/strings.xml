@@ -37,7 +37,7 @@
     <string name="btn_magisk_guide">Magisk rehberini aç</string>
 
     <string name="install_title">HermesSIM Ana Cihaz modülünü kurun</string>
-    <string name="install_body">Root çalışıyor. Magisk uygulamasında Modüller → Depolamadan yükle\'yi açın, HermesSIM-Host-Magisk.zip dosyasını (tosbisim.com\'dan) seçin ve telefonu yeniden başlatın. HermesSIM kendiliğinden açılır ve bu ekran kaldığı yerden devam eder.</string>
+    <string name="install_body">Root çalışıyor. Magisk uygulamasında Modüller → Depolamadan yükle\'yi açın, HermesSIM-Host-Magisk.zip dosyasını (hermessim.keremgok.tr\'den) seçin ve telefonu yeniden başlatın. HermesSIM kendiliğinden açılır ve bu ekran kaldığı yerden devam eder.</string>
     <string name="btn_install">Kur</string>
     <string name="btn_installing">Kuruluyor…</string>
     <string name="install_failed_title">Kurulum tamamlanmadı</string>

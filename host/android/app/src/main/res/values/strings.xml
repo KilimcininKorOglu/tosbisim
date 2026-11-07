@@ -41,7 +41,7 @@
 
     <!-- module -->
     <string name="install_title">Install the HermesSIM Host module</string>
-    <string name="install_body">Root works. In the Magisk app, open Modules → Install from storage, choose HermesSIM-Host-Magisk.zip (from tosbisim.com) and restart the phone. HermesSIM starts by itself and this screen continues from there.</string>
+    <string name="install_body">Root works. In the Magisk app, open Modules → Install from storage, choose HermesSIM-Host-Magisk.zip (from hermessim.keremgok.tr) and restart the phone. HermesSIM starts by itself and this screen continues from there.</string>
     <string name="btn_install">Install</string>
     <string name="btn_installing">Installing…</string>
     <string name="install_failed_title">The install didn\'t finish</string>
